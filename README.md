@@ -29,7 +29,7 @@ Check out Kawaii Helper in action!
 # Download Links ⬇️
 Join the *kawaii* revolution and grab your copy now:  
 - **[Greasyfork](https://greasyfork.org/en/scripts/528907-kawaii-helper-drawing-bot-for-gartic-io/)** - Official script hub.  
-- **[GitHub](https://github.com/yourusername/kawaii-helper/releases)** - Direct downloads. *(Update with your repo link!)*  
+- **[GitHub](https://github.com/anonimbiri-IsBack/kawaii-helper/releases)** - Direct downloads. *(Update with your repo link!)*  
 
 ---
 
