@@ -4,7 +4,7 @@ Welcome to **Kawaii Helper**, the ultimate drawing bot for Gartic.io! Unleash yo
 
 ## Meet Your Kawaii Assistant ✨
 Say hello to your new drawing buddy! This adorable anime girl is here to make your Gartic.io adventures extra *kawaii*:  
-<img src="https://i.imgur.com/q1QP8gZ.png" alt="Kawaii Assistant" width="200" style="border: 3px solid #ff99cc; border-radius: 15px;" />
+<img src="./Assets/kawaii-logo.png" alt="Kawaii Assistant" width="200" style="border: 3px solid #ff99cc; border-radius: 15px;" />
 
 ## Download & License 💫
 [![Downloads](https://img.shields.io/greasyfork/dt/528907?style=for-the-badge&color=ff66cc&labelColor=cc99ff&logo=greasyfork&logoColor=white)](https://github.com/yourusername/kawaii-helper#installation) [![License](https://img.shields.io/badge/License-MIT-ff66cc?style=for-the-badge&logo=book&logoColor=white)]()  
@@ -12,8 +12,9 @@ Say hello to your new drawing buddy! This adorable anime girl is here to make yo
 ## Screenshots 📸
 Check out Kawaii Helper in action!  
 <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
-  <img src="https://i.imgur.com/SxImc7x.png" alt="Guessing Mode" width="300" style="border: 2px solid #cc99ff; border-radius: 10px;" />
-  <img src="https://i.imgur.com/tJZEtXd.png" alt="Drawing Mode" width="300" style="border: 2px solid #cc99ff; border-radius: 10px;" />
+  <img src="./Assets/guess-snap" alt="Guess Snap" width="300" style="border: 2px solid #cc99ff; border-radius: 10px;" />
+  <img src="./Assets/draw-snap" alt="Draw Snap" width="300" style="border: 2px solid #cc99ff; border-radius: 10px;" />
+  <img src="./Assets/settings-snap" alt="Settings Snap" width="300" style="border: 2px solid #cc99ff; border-radius: 10px;" />
 </div>
 
 ## Features 🌟
