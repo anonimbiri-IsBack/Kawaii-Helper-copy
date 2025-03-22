@@ -4417,7 +4417,7 @@ _N_E = (window.webpackJsonp_N_E = window.webpackJsonp_N_E || []).push([[15], {
                         onSubmit: this.send
                     }, Rt("div", {
                         className: "textGame"
-                    }, r.created || c ? Rt("input", {
+                    }, Rt("input", {
                         type: "text",
                         name: "chat",
                         className: "mousetrap",
@@ -4430,17 +4430,6 @@ _N_E = (window.webpackJsonp_N_E = window.webpackJsonp_N_E || []).push([[15], {
                         enterKeyHint: "send",
                         onChange: this.handleText,
                         ref: this._ref
-                    }) : Rt("input", {
-                        type: "text",
-                        name: "chat",
-                        className: "mousetrap",
-                        autoComplete: "off",
-                        autoCorrect: "off",
-                        autoCapitalize: "off",
-                        value: this._lang.loginChat,
-                        maxLength: 100,
-                        ref: this._ref,
-                        disabled: !0
                     }), Rt("span", null), Rt("label", null, "tab", Rt("span", {
                         className: "tooltip"
                     }, this._lang.sendText)))))
