@@ -7,7 +7,7 @@ Say hello to your new drawing buddy! This adorable anime girl is here to make yo
 <img src="./Assets/kawaii-logo.png" alt="Kawaii Assistant" width="200" style="border: 3px solid #ff99cc; border-radius: 15px;" />
 
 ## Download & License 💫
-[![Downloads](https://img.shields.io/greasyfork/dt/528907?style=for-the-badge&color=ff66cc&labelColor=cc99ff&logo=greasyfork&logoColor=white)](https://github.com/anonimbiri-IsBack/kawaii-helper#installation) [![License](https://img.shields.io/badge/License-MIT-ff66cc?style=for-the-badge&logo=book&logoColor=white)]()  
+[![Downloads](https://img.shields.io/greasyfork/dt/528907?style=for-the-badge&color=ff66cc&labelColor=cc99ff&logo=greasyfork&logoColor=white)](https://github.com/anonimbiri-IsBack/kawaii-helper#installation-) [![License](https://img.shields.io/badge/License-MIT-ff66cc?style=for-the-badge&logo=book&logoColor=white)]()  
 
 ## Screenshots 📸
 Check out Kawaii Helper in action!  
