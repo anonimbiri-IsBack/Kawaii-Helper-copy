@@ -12,9 +12,9 @@ Say hello to your new drawing buddy! This adorable anime girl is here to make yo
 ## Screenshots 📸
 Check out Kawaii Helper in action!  
 <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
-  <img src="./Assets/guess-snap" alt="Guess Snap" width="300" style="border: 2px solid #cc99ff; border-radius: 10px;" />
-  <img src="./Assets/draw-snap" alt="Draw Snap" width="300" style="border: 2px solid #cc99ff; border-radius: 10px;" />
-  <img src="./Assets/settings-snap" alt="Settings Snap" width="300" style="border: 2px solid #cc99ff; border-radius: 10px;" />
+  <img src="./Assets/guess-snap.png" alt="Guess Snap" width="300" style="border: 2px solid #cc99ff; border-radius: 10px;" />
+  <img src="./Assets/draw-snap.png" alt="Draw Snap" width="300" style="border: 2px solid #cc99ff; border-radius: 10px;" />
+  <img src="./Assets/settings-snap.png" alt="Settings Snap" width="300" style="border: 2px solid #cc99ff; border-radius: 10px;" />
 </div>
 
 ## Features 🌟
