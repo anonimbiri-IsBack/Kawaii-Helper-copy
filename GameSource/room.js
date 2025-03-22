@@ -5788,7 +5788,8 @@ _N_E = (window.webpackJsonp_N_E = window.webpackJsonp_N_E || []).push([[15], {
                         }
                         )),
                         e.unlock(),
-                        this.game = e
+                        this.game = e,
+                        console.log(this)
                     } else
                         g.a.push("/")
                 }
