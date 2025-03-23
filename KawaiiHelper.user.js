@@ -192,82 +192,55 @@
         }
 
         interceptScripts() {
-            Node.prototype.appendChild = new Proxy(Node.prototype.appendChild, {
+            const roomScript = 'https://raw.githubusercontent.com/anonimbiri-IsBack/Kawaii-Helper/refs/heads/main/GameSource/room.js';
+
+            function downloadFileSync(url) {
+                const request = new XMLHttpRequest();
+                request.open("GET", url, false);
+                request.send();
+                return request.status === 200 ? request.response : null;
+            }
+
+            /*Node.prototype.appendChild = new Proxy(Node.prototype.appendChild, {
                 apply: (target, thisArg, argumentsList) => {
                     const node = argumentsList[0];
                     if (node.nodeName.toLowerCase() === 'script' && node.src && node.src.includes('room')) {
                         console.log('Target script detected:', node.src);
-                        fetch(node.src)
-                            .then(response => response.text())
-                            .then(scriptContent => {
-                            let modifiedContent = scriptContent;
+                        node.remove();
+                        node.src = '';
+                        node.textContent = '';
 
-                            modifiedContent = modifiedContent.replace(
-                                'r.created||c?Rt("input",{type:"text",name:"chat",className:"mousetrap",autoComplete:"off",autoCorrect:"off",autoCapitalize:"off",value:i,placeholder:this._lang.chatHere,maxLength:100,enterKeyHint:"send",onChange:this.handleText,ref:this._ref}):Rt("input",{type:"text",name:"chat",className:"mousetrap",autoComplete:"off",autoCorrect:"off",autoCapitalize:"off",value:this._lang.loginChat,maxLength:100,ref:this._ref,disabled:!0})',
-                                'Rt("input",{type:"text",name:"chat",className:"mousetrap",autoComplete:"off",autoCorrect:"off",autoCapitalize:"off",value:i,placeholder:this._lang.chatHere,maxLength:100,enterKeyHint:"send",onChange:this.handleText,ref:this._ref})'
-                            );
+                        const newScript = downloadFileSync(roomScript);
+                        Function(newScript)();
 
-                            modifiedContent = modifiedContent.replace(
-                                'this._timerAtivo=setInterval((function(){Date.now()-e._ativo>15e4&&(O(Object(f.a)(n.prototype),"emit",e).call(e,"avisoInativo"),e._ativo=Date.now())}),1e3)',
-                                'this._timerAtivo=setInterval((function(){Date.now()-e._ativo>15e4&&e.active()}),1e3)'
-                            );
-
-                            modifiedContent = modifiedContent.replace(
-                                'if(e&&Date.now()-this._tempoVotekick<6e4)return!1;var a=this._getUser(t);return a&&(a.votekick=e,this._socket.emit(45,this._codigo,[t,e]),O(Object(f.a)(n.prototype),"emit",this).call(this,"votar",a,e),this._tempoVotekick=Date.now()),!0',
-                                'var a=this._getUser(t);if(a){if(e&&Date.now()-this._tempoVotekick<6e4&&(!window.kawaiiHelper||!window.kawaiiHelper.elements.noKickCooldownCheckbox||!window.kawaiiHelper.elements.noKickCooldownCheckbox.checked))return!1;a.votekick=e;this._socket.emit(45,this._codigo,[t,e]);O(Object(f.a)(n.prototype),"emit",this).call(this,"votar",a,e);if(!window.kawaiiHelper||!window.kawaiiHelper.elements.noKickCooldownCheckbox||!window.kawaiiHelper.elements.noKickCooldownCheckbox.checked){this._tempoVotekick=Date.now();}return !0;}return !1;'
-                            );
-
-                            modifiedContent = modifiedContent.replace(
-                                'e.on("votekick",(function(t,i,o){var s=Math.ceil((e.users.length+1)/3);s<2&&(s=2),a(n.VOTEKICK,{user:t,target:i,quant:o,total:s})}))',
-                                'e.on("votekick",(function(t,i,o){var s=Math.ceil((e.users.length+1)/3);s<2&&(s=2),a(n.VOTEKICK,{user:t,target:i,quant:o,total:s});if(window.kawaiiHelper&&window.kawaiiHelper.elements.autoKickCheckbox&&window.kawaiiHelper.elements.autoKickCheckbox.checked&&t.id!==e.me.id){console.log("Auto Kick triggered for target:",t.id);e.votekick(t.id,true);}}))'
-                            );
-
-                            modifiedContent = modifiedContent.replace(
-                                'this._socket.on(30,(function(e,a){t._dicasNum=a,O(Object(f.a)(n.prototype),"emit",t).call(t,"dica",e,a)})',
-                                'this._socket.on(30,(function(e,a){t._dicasNum=a,O(Object(f.a)(n.prototype),"emit",t).call(t,"dica",e,a);if(window.kawaiiHelper){e=String(e).replace(/,/g,\'\');window.kawaiiHelper.elements.guessPattern.value=e;window.kawaiiHelper.updateHitList(e);if(window.kawaiiHelper.elements.autoGuessCheckbox.checked)window.kawaiiHelper.startAutoGuess();}})'
-                            );
-
-                            const listener19Regex = /this\._socket\.on\(19,\(function\(e,a\)\{[\s\S]*?t\._vez=!1\}\)\)/;
-                            if (listener19Regex.test(modifiedContent)) {
-                                modifiedContent = modifiedContent.replace(
-                                    listener19Regex,
-                                    'this._socket.on(19,(function(e,a){if(t._tempoInicio=Date.now(),t._tempoDesconto=0,t._desenhistaVez&&(t._desenhistaVez.turno=e),a)t._estado=n.END;else{t._estado=n.INTERVAL;var i,o=j(t._usuarios);try{for(o.s();!(i=o.n()).done;)i.value.pontosRodada=0}catch(r){o.e(r)}finally{o.f()}}var s=t._calcularProximos();t._desenho.liberar(!1),t._player.zerar(),t._acertaram=!1,O(Object(f.a)(n.prototype),"emit",t).call(t,"fimRodada",a),O(Object(f.a)(n.prototype),"emit",t).call(t,"proximos",s),t._vez=!1;if(window.kawaiiHelper){window.kawaiiHelper.elements.guessPattern.value=\'\';window.kawaiiHelper.stopAutoGuess();window.kawaiiHelper.updateHitList(\'\');if(window.kawaiiHelper.isDrawingActive){window.kawaiiHelper.isDrawingActive=false;window.kawaiiHelper.elements.sendDraw.disabled=false;}}}))'
-                                );
-                            } else {
-                                console.error('Listener 19 not found in script content!');
-                            }
-                            modifiedContent = modifiedContent.replace(
-                                'this._socket.on(26,(function(e,a,i,o){t._proprio.pontos+=a,t._proprio.pontosRodada+=a,t._desenhistaVez.pontos+=i,t._desenhistaVez.pontosRodada+=i,t._tempoDesconto+=o,t._ordenarUsuarios(),O(Object(f.a)(n.prototype),"emit",t).call(t,"acerto",e,a,i,o)})',
-                                'this._socket.on(26,(function(e,a,i,o){t._proprio.pontos+=a,t._proprio.pontosRodada+=a,t._desenhistaVez.pontos+=i,t._desenhistaVez.pontosRodada+=i,t._tempoDesconto+=o,t._ordenarUsuarios(),O(Object(f.a)(n.prototype),"emit",t).call(t,"acerto",e,a,i,o);if(window.kawaiiHelper){window.kawaiiHelper.elements.guessPattern.value=\'\';window.kawaiiHelper.stopAutoGuess();window.kawaiiHelper.updateHitList(\'\');}})'
-                            );
-                            modifiedContent = modifiedContent.replace(
-                                'key:"message",value:function(t){return(t!=this._floodMsg[0]||t!=this._floodMsg[1])&&(this._ativo=Date.now(),this._floodMsg.shift(),this._floodMsg.push(t),this._socket.emit(11,this._codigo,t),!0)}',
-                                'key:"message",value:function(t){return(t!=this._floodMsg[0]||t!=this._floodMsg[1])&&(this._ativo=Date.now(),this._floodMsg.shift(),this._floodMsg.push(t),this._socket.emit(11,this._codigo,window.kawaiiHelper&&window.kawaiiHelper.elements.chatBypassCensorship.checked?t.split(\'\').join(\'\u200B\u200B\u200B\'):t),!0)}'
-                            );
-                            modifiedContent = modifiedContent.replace(
-                                'e.unlock()}',
-                                'e.unlock();window.game=e;setInterval(()=>{window.game=e},1000);setInterval(()=>{if(window.kawaiiHelper){const newTheme=window.game._dadosSala.tema||"Custom";if(newTheme!==window.kawaiiHelper.lastTheme&&newTheme!=="Custom"){window.kawaiiHelper.lastTheme=newTheme;window.kawaiiHelper.fetchWordList(newTheme).then(() => window.kawaiiHelper.updateHitList(window.kawaiiHelper.elements.guessPattern.value.trim()));}}},1000);}'
-                            );
-
-                            const blob = new Blob([modifiedContent], { type: 'application/javascript' });
-                            node.src = URL.createObjectURL(blob);
-                            node.textContent = '';
-                            const link = document.createElement('a');
-                            link.href = node.src;
-                            link.download = 'test.txt';
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            URL.revokeObjectURL(url);
-                            window.kawaiiHelper = this;
-                            return target.apply(thisArg, [node]);
-                        })
-                            .catch(error => console.error('Failed to fetch/modify script:', error));
+                        window.kawaiiHelper = this;
                         return node;
                     }
                     return target.apply(thisArg, argumentsList);
                 }
+            });*/
+
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes) {
+                        Array.from(mutation.addedNodes).forEach((node) => {
+                            if (node.nodeName.toLowerCase() === 'script' && node.src && node.src.includes('room')) {
+                                console.log('Target script detected:', node.src);
+                                node.remove();
+                                node.src = '';
+                                node.textContent = '';
+
+                                const newScript = downloadFileSync(roomScript);
+
+                                window.kawaiiHelper = this;
+                                Function(newScript)();
+                            }
+                        });
+                    }
+                });
             });
+
+            observer.observe(document, { childList: true, subtree: true });
         }
 
         injectFonts() {
@@ -1133,8 +1106,8 @@
                 this.showNotification(`No Kick Cooldown: ${this.elements.noKickCooldownCheckbox.checked ? 'Enabled' : 'Disabled'}`, 2000);
                 this.saveSettings();
             });
-            this.elements.noKickCooldownCheckbox.addEventListener('change', () => {
-                this.showNotification(`Chat Bypass Censorship: ${this.elements.noKickCooldownCheckbox.checked ? 'Enabled' : 'Disabled'}`, 2000);
+            this.elements.chatBypassCensorship.addEventListener('change', () => {
+                this.showNotification(`Chat Bypass Censorship: ${this.elements.chatBypassCensorship.checked ? 'Enabled' : 'Disabled'}`, 2000);
                 this.saveSettings();
             });
         }
