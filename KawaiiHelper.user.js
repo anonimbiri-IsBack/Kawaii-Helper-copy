@@ -8,7 +8,7 @@
 // @author       anonimbiri & Gartic-Developers
 // @license      MIT
 // @match        https://gartic.io/*
-// @icon         https://raw.githubusercontent.com/anonimbiri-IsBack/Kawaii-Helper/refs/heads/main/Assets/kawaii-logo.png
+// @icon         https://raw.githubusercontent.com/Gartic-Developers/Kawaii-Helper/refs/heads/main/Assets/kawaii-logo.png
 // @run-at       document-start
 // @grant        none
 // ==/UserScript==
@@ -274,7 +274,7 @@
             const kawaiiHTML = `
         <div class="kawaii-cheat" id="kawaiiCheat">
             <div class="kawaii-header" id="kawaiiHeader">
-                <img src="https://raw.githubusercontent.com/anonimbiri-IsBack/Kawaii-Helper/refs/heads/main/Assets/kawaii-logo.png" alt="Anime Girl" class="header-icon">
+                <img src="https://raw.githubusercontent.com/Gartic-Developers/Kawaii-Helper/refs/heads/main/Assets/kawaii-logo.png" alt="Anime Girl" class="header-icon">
                 <h2 data-translate="✧ Kawaii Helper ✧">✧ Kawaii Helper ✧</h2>
                 <button class="minimize-btn" id="minimizeBtn">▼</button>
             </div>
