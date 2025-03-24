@@ -345,8 +345,6 @@ _N_E = (window.webpackJsonp_N_E = window.webpackJsonp_N_E || []).push([[10], {
                         value: "50"
                     }, "50"), I("option", {
                         value: "51"
-                    }, "Max: 255"), I("option", {
-                        value: "1"
                     }, "Max: 255")))), I("div", {
                         className: "fieldset goalPoints"
                     }, I("span", {
