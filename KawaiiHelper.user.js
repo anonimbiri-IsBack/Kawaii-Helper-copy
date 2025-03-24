@@ -94,7 +94,7 @@
             this.wordListURLs = {
                 "General (en)": "https://cdn.jsdelivr.net/gh/Gartic-Developers/Gartic-WordList@master/languages/English/general.json",
                 "General (tr)": "https://cdn.jsdelivr.net/gh/Gartic-Developers/Gartic-WordList@master/languages/Turkish/general.json",
-                "General (jp)": "https://cdn.jsdelivr.net/gh/Gartic-Developers/Gartic-WordList@master/languages/Japanese/general.json"
+                "General (ja)": "https://cdn.jsdelivr.net/gh/Gartic-Developers/Gartic-WordList@master/languages/Japanese/general.json"
             };
             this.elements = {};
             this.state = {
