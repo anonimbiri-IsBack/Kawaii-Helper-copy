@@ -372,8 +372,8 @@ _N_E = (window.webpackJsonp_N_E = window.webpackJsonp_N_E || []).push([[10], {
                     }, "360"), I("option", {
                         value: "480"
                     }, "480"), I("option", {
-                        value: "1000000"
-                    }, "1000000")))), I("div", {
+                        value: "65534"
+                    }, "Max: 65534")))), I("div", {
                         className: "fieldset visibleRoom"
                     }, I("span", {
                         className: "legend"
