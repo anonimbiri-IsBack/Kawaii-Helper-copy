@@ -344,7 +344,9 @@ _N_E = (window.webpackJsonp_N_E = window.webpackJsonp_N_E || []).push([[10], {
                     }, "30"), I("option", {
                         value: "50"
                     }, "50"), I("option", {
-                        value: "255"
+                        value: "51"
+                    }, "Max: 255"), I("option", {
+                        value: "1"
                     }, "Max: 255")))), I("div", {
                         className: "fieldset goalPoints"
                     }, I("span", {
@@ -372,7 +374,7 @@ _N_E = (window.webpackJsonp_N_E = window.webpackJsonp_N_E || []).push([[10], {
                     }, "360"), I("option", {
                         value: "480"
                     }, "480"), I("option", {
-                        value: "1000000"
+                        value: "481"
                     }, "1000000")))), I("div", {
                         className: "fieldset visibleRoom"
                     }, I("span", {
