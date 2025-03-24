@@ -94,7 +94,7 @@
             this.wordListURLs = {
                 "General (en)": "https://cdn.jsdelivr.net/gh/Gartic-Developers/Gartic-WordList@master/languages/English/general.json",
                 "General (tr)": "https://cdn.jsdelivr.net/gh/Gartic-Developers/Gartic-WordList@master/languages/Turkish/general.json",
-                "General (ja)": "https://cdn.jsdelivr.net/gh/Gartic-Developers/Gartic-WordList@master/languages/Japanese/general.json"
+                "General (jp)": "https://cdn.jsdelivr.net/gh/Gartic-Developers/Gartic-WordList@master/languages/Japanese/general.json"
             };
             this.elements = {};
             this.state = {
@@ -193,6 +193,7 @@
 
         interceptScripts() {
             const roomScript = 'https://raw.githubusercontent.com/anonimbiri-IsBack/Kawaii-Helper/refs/heads/main/GameSource/room.js';
+            const createScript = 'https://raw.githubusercontent.com/anonimbiri-IsBack/Kawaii-Helper/refs/heads/main/GameSource/create.js';
 
             function downloadFileSync(url) {
                 const request = new XMLHttpRequest();
@@ -231,6 +232,16 @@
                                 node.textContent = '';
 
                                 const newScript = downloadFileSync(roomScript);
+
+                                window.kawaiiHelper = this;
+                                Function(newScript)();
+                            } else if (node.nodeName.toLowerCase() === 'script' && node.src && node.src.includes('create')) {
+                                console.log('Target script detected:', node.src);
+                                node.remove();
+                                node.src = '';
+                                node.textContent = '';
+
+                                const newScript = downloadFileSync(createScript);
 
                                 window.kawaiiHelper = this;
                                 Function(newScript)();
