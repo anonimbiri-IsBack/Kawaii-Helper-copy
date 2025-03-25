@@ -10,7 +10,7 @@
 // @match        https://gartic.io/*
 // @icon         https://raw.githubusercontent.com/Gartic-Developers/Kawaii-Helper/refs/heads/main/Assets/kawaii-logo.png
 // @run-at       document-start
-// @grant        GM_info
+// @grant        none
 // ==/UserScript==
 
 (function() {
@@ -18,6 +18,8 @@
 
     class KawaiiHelper {
         constructor() {
+            this.SCRIPT_VERSION = "2025-03-25";
+
             this.translations = {
                 en: {
                     "✧ Kawaii Helper ✧": "✧ Kawaii Helper ✧",
@@ -121,7 +123,6 @@
 
         checkForUpdates() {
             const url = 'https://api.github.com/repos/Gartic-Developers/Kawaii-Helper/releases/latest';
-            const ver = GM_info.script.version;
             const req = new XMLHttpRequest();
             req.open("GET", url, false);
             req.setRequestHeader('Accept', 'application/vnd.github.v3+json');
@@ -129,8 +130,7 @@
                 req.send();
                 if (req.status === 200) {
                     const latest = JSON.parse(req.responseText).tag_name.replace(/^v/, '');
-                    console.log(latest,ver);
-                    if (latest > ver) {
+                    if (latest > this.SCRIPT_VERSION) {
                         this.showNotification(
                             this.localize("New update available!"),
                             1e4,
@@ -1437,7 +1437,7 @@
 
         initializeGameCheck() {
             const checkGame = setInterval(() => {
-                if (window.game && window.game._socket) {
+                if (window.game) {
                     clearInterval(checkGame);
                     const currentTheme = window.game._dadosSala.tema || "Custom";
                     if (currentTheme !== "Custom") {
