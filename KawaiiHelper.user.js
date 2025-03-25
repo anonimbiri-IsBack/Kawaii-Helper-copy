@@ -10,7 +10,7 @@
 // @match        https://gartic.io/*
 // @icon         https://raw.githubusercontent.com/Gartic-Developers/Kawaii-Helper/refs/heads/main/Assets/kawaii-logo.png
 // @run-at       document-start
-// @grant        none
+// @grant        GM_info
 // ==/UserScript==
 
 (function() {
@@ -52,6 +52,7 @@
                     "Auto Kick": "Auto Kick",
                     "No Kick Cooldown": "No Kick Cooldown",
                     "Chat Bypass Censorship": "Chat Bypass Censorship",
+                    "New update available!": "New update available!"
                 },
                 tr: {
                     "✧ Kawaii Helper ✧": "✧ Kawaii Yardımcı ✧",
@@ -86,6 +87,7 @@
                     "Auto Kick": "Otomatik Atma",
                     "No Kick Cooldown": "Atma Bekleme Süresi Yok",
                     "Chat Bypass Censorship": "Sohbet Sansürünü Atlat",
+                    "New update available!": "Yeni güncelleme var!"
                 }
             };
             this.currentLang = navigator.language.split('-')[0] in this.translations ? navigator.language.split('-')[0] : 'en';
@@ -115,6 +117,30 @@
             const helper = new KawaiiHelper();
             helper.setup();
             return helper;
+        }
+
+        checkForUpdates() {
+            const url = 'https://api.github.com/repos/Gartic-Developers/Kawaii-Helper/releases/latest';
+            const ver = GM_info.script.version;
+            const req = new XMLHttpRequest();
+            req.open("GET", url, false);
+            req.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+            try {
+                req.send();
+                if (req.status === 200) {
+                    const latest = JSON.parse(req.responseText).tag_name.replace(/^v/, '');
+                    console.log(latest,ver);
+                    if (latest > ver) {
+                        this.showNotification(
+                            this.localize("New update available!"),
+                            1e4,
+                            { text: 'Update', action: () => window.open('https://github.com/Gartic-Developers/Kawaii-Helper/releases/latest', '_blank') }
+                        );
+                    }
+                }
+            } catch (e) {
+                console.error('Update error:', e);
+            }
         }
 
         // Load settings from localStorage
@@ -155,14 +181,26 @@
             return text;
         }
 
-        showNotification(message, duration = 3000) {
+        showNotification(message, duration = 3000, button = null) {
             const notification = document.createElement('div');
             notification.className = 'kawaii-notification';
-            notification.innerHTML = `
+
+            let notificationHTML = `
+            <span class="kawaii-notification-icon">✧</span>
+            <span class="kawaii-notification-text">${message}</span>
+            <button class="kawaii-notification-close">✕</button>
+            `;
+
+            if (button) {
+                notificationHTML = `
                 <span class="kawaii-notification-icon">✧</span>
                 <span class="kawaii-notification-text">${message}</span>
+                <button class="kawaii-notification-button">${button.text}</button>
                 <button class="kawaii-notification-close">✕</button>
-            `;
+                `;
+            }
+
+            notification.innerHTML = notificationHTML;
             this.elements.notifications.appendChild(notification);
             setTimeout(() => notification.classList.add('show'), 10);
 
@@ -176,6 +214,15 @@
                 notification.classList.remove('show');
                 setTimeout(() => notification.remove(), 300);
             });
+
+            if (button) {
+                notification.querySelector('.kawaii-notification-button').addEventListener('click', () => {
+                    button.action();
+                    clearTimeout(timeout);
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 300);
+                });
+            }
         }
 
         setup() {
@@ -185,6 +232,7 @@
                 this.injectHTML();
                 this.cacheElements();
                 this.applySavedSettings(); // Apply saved settings after elements are cached
+                this.checkForUpdates();
                 this.addStyles();
                 this.bindEvents();
                 this.initializeGameCheck();
@@ -445,7 +493,7 @@
 
                 .kawaii-cheat {
                     position: fixed;
-                    top: 20px;
+                    top: 100px;
                     right: 20px;
                     width: 280px;
                     background: var(--panel-bg);
@@ -694,334 +742,355 @@
                     cursor: pointer;
                 }
 
-                .dropzone-content {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 8px;
-                    text-align: center;
-                    pointer-events: none;
-                }
+.dropzone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    pointer-events: none;
+}
 
-                .dropzone-icon {
-                    font-size: 24px;
-                    color: var(--primary-color);
-                    animation: pulse 1.5s infinite ease-in-out;
-                }
+.dropzone-icon {
+    font-size: 24px;
+    color: var(--primary-color);
+    animation: pulse 1.5s infinite ease-in-out;
+}
 
-                @keyframes pulse {
-                    0%, 100% { transform: scale(1); }
-                    50% { transform: scale(1.1); }
-                }
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
 
-                .dropzone-content p {
-                    margin: 0;
-                    color: var(--text-color);
-                    font-size: 12px;
-                    font-weight: 500;
-                }
+.dropzone-content p {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 12px;
+    font-weight: 500;
+}
 
-                .slider-container {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 6px;
-                    background: var(--element-bg);
-                    padding: 8px;
-                    border-radius: 10px;
-                    border: 1px dashed var(--primary-color);
-                }
+.slider-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--element-bg);
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px dashed var(--primary-color);
+}
 
-                .slider-label {
-                    font-size: 12px;
-                    color: var(--text-color);
-                    font-weight: 700;
-                    text-align: center;
-                }
+.slider-label {
+    font-size: 12px;
+    color: var(--text-color);
+    font-weight: 700;
+    text-align: center;
+}
 
-                .custom-slider {
-                    position: relative;
-                    height: 25px;
-                    padding: 0 8px;
-                }
+.custom-slider {
+    position: relative;
+    height: 25px;
+    padding: 0 8px;
+}
 
-                .custom-slider input[type="range"] {
-                    -webkit-appearance: none;
-                    width: 100%;
-                    height: 6px;
-                    background: transparent;
-                    position: absolute;
-                    top: 50%;
-                    left: 0;
-                    transform: translateY(-50%);
-                    z-index: 2;
-                }
+.custom-slider input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    background: transparent;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+                          z-index: 2;
+                          }
 
-                .custom-slider .slider-track {
-                    position: absolute;
-                    top: 50%;
-                    left: 0;
-                    width: 100%;
-                    height: 6px;
-                    background: linear-gradient(to right, var(--primary-dark) 0%, var(--primary-dark) var(--slider-progress), var(--primary-light) var(--slider-progress), var(--primary-light) 100%);
-                    border-radius: 3px;
-                    transform: translateY(-50%);
-                    z-index: 1;
-                }
+.custom-slider .slider-track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(to right, var(--primary-dark) 0%, var(--primary-dark) var(--slider-progress), var(--primary-light) var(--slider-progress), var(--primary-light) 100%);
+    border-radius: 3px;
+    transform: translateY(-50%);
+                          z-index: 1;
+                          }
 
-                .custom-slider input[type="range"]::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    width: 16px;
-                    height: 16px;
-                    background: var(--primary-color);
-                    border-radius: 50%;
-                    border: 1px dashed var(--element-active-text);
-                    cursor: pointer;
-                    transition: transform 0.3s ease;
-                }
+.custom-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    border: 1px dashed var(--element-active-text);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
 
-                .custom-slider input[type="range"]::-webkit-slider-thumb:hover {
-                    transform: scale(1.2);
-                }
+.custom-slider input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
 
-                .custom-slider span {
-                    position: absolute;
-                    bottom: -15px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    font-size: 10px;
-                    color: var(--text-color);
-                    background: var(--element-active-text);
-                    padding: 2px 6px;
-                    border-radius: 8px;
-                    border: 1px dashed var(--primary-color);
-                    white-space: nowrap;
-                }
+.custom-slider span {
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+                          font-size: 10px;
+                          color: var(--text-color);
+    background: var(--element-active-text);
+    padding: 2px 6px;
+    border-radius: 8px;
+    border: 1px dashed var(--primary-color);
+    white-space: nowrap;
+}
 
-                .hit-list {
-                    max-height: 180px;
-                    overflow-y: scroll;
-                    background: var(--element-bg);
-                    border: 1px dashed var(--primary-color);
-                    border-radius: 10px;
-                    padding: 8px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 6px;
-                    scrollbar-width: thin;
-                    scrollbar-color: var(--primary-color) var(--element-bg);
-                }
+.hit-list {
+    max-height: 180px;
+    overflow-y: scroll;
+    background: var(--element-bg);
+    border: 1px dashed var(--primary-color);
+    border-radius: 10px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) var(--element-bg);
+}
 
-                .hit-list::-webkit-scrollbar {
-                    width: 6px;
-                }
+.hit-list::-webkit-scrollbar {
+    width: 6px;
+}
 
-                .hit-list::-webkit-scrollbar-thumb {
-                    background-color: var(--primary-color);
-                    border-radius: 10px;
-                }
+.hit-list::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+    border-radius: 10px;
+}
 
-                .hit-list::-webkit-scrollbar-track {
-                    background: var(--element-bg);
-                }
+.hit-list::-webkit-scrollbar-track {
+    background: var(--element-bg);
+}
 
-                .hit-list button {
-                    background: rgba(255, 240, 245, 0.8);
-                    border: 1px dashed var(--primary-color);
-                    padding: 6px 10px;
-                    border-radius: 8px;
-                    color: var(--text-color);
-                    font-size: 12px;
-                    font-weight: 700;
-                    cursor: pointer;
-                    transition: background 0.3s ease, transform 0.3s ease;
-                    text-align: left;
-                }
+.hit-list button {
+    background: rgba(255, 240, 245, 0.8);
+    border: 1px dashed var(--primary-color);
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: var(--text-color);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease;
+    text-align: left;
+}
 
-                .hit-list button:hover:not(.tried) {
-                    background: var(--primary-color);
-                    color: var(--element-active-text);
-                    transform: scale(1.03);
-                }
+.hit-list button:hover:not(.tried) {
+    background: var(--primary-color);
+    color: var(--element-active-text);
+    transform: scale(1.03);
+}
 
-                .hit-list button.tried {
-                    background: rgba(255, 182, 193, 0.6);
-                    border-color: var(--primary-light);
-                    color: var(--primary-dark);
-                    opacity: 0.7;
-                    cursor: not-allowed;
-                }
+.hit-list button.tried {
+    background: rgba(255, 182, 193, 0.6);
+    border-color: var(--primary-light);
+    color: var(--primary-dark);
+    opacity: 0.7;
+    cursor: not-allowed;
+}
 
-                .hit-list .tried-label {
-                    font-size: 10px;
-                    color: var(--primary-dark);
-                    text-align: center;
-                    padding: 4px;
-                    background: var(--element-active-text);
-                    border-radius: 8px;
-                    border: 1px dashed var(--primary-color);
-                }
+.hit-list .tried-label {
+    font-size: 10px;
+    color: var(--primary-dark);
+    text-align: center;
+    padding: 4px;
+    background: var(--element-active-text);
+    border-radius: 8px;
+    border: 1px dashed var(--primary-color);
+}
 
-                .hit-list .message {
-                    font-size: 12px;
-                    color: var(--text-color);
-                    text-align: center;
-                    padding: 8px;
-                }
+.hit-list .message {
+    font-size: 12px;
+    color: var(--text-color);
+    text-align: center;
+    padding: 8px;
+}
 
-                .image-preview {
-                    position: relative;
-                    margin-top: 10px;
-                    background: var(--element-bg);
-                    padding: 8px;
-                    border-radius: 10px;
-                    border: 1px dashed var(--primary-color);
-                }
+.image-preview {
+    position: relative;
+    margin-top: 10px;
+    background: var(--element-bg);
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px dashed var(--primary-color);
+}
 
-                .image-preview img {
-                    max-width: 100%;
-                    max-height: 120px;
-                    border-radius: 8px;
-                    display: block;
-                    margin: 0 auto;
-                }
+.image-preview img {
+    max-width: 100%;
+    max-height: 120px;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+}
 
-                .preview-controls {
-                    position: absolute;
-                    top: 12px;
-                    right: 12px;
-                    display: flex;
-                    gap: 6px;
-                }
+.preview-controls {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+}
 
-                .cancel-btn {
-                    background: transparent;
-                    border: 1px dashed var(--primary-dark);
-                    border-radius: 6px;
-                    width: 24px;
-                    height: 24px;
-                    color: var(--primary-dark);
-                    font-size: 16px;
-                    line-height: 20px;
-                    text-align: center;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                }
+.cancel-btn {
+    background: transparent;
+    border: 1px dashed var(--primary-dark);
+    border-radius: 6px;
+    width: 24px;
+    height: 24px;
+    color: var(--primary-dark);
+    font-size: 16px;
+    line-height: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
 
-                .cancel-btn:hover {
-                    background: var(--primary-dark);
-                    color: var(--element-active-text);
-                    transform: scale(1.1);
-                }
+.cancel-btn:hover {
+    background: var(--primary-dark);
+    color: var(--element-active-text);
+    transform: scale(1.1);
+}
 
-                .draw-btn {
-                    background: var(--primary-color);
-                    border: 1px dashed var(--primary-dark);
-                    padding: 8px;
-                    border-radius: 10px;
-                    color: var(--element-active-text);
-                    font-size: 14px;
-                    font-weight: 700;
-                    cursor: pointer;
-                    transition: background 0.3s ease, transform 0.3s ease;
-                    text-align: center;
-                    width: 100%;
-                    box-sizing: border-box;
-                }
+.draw-btn {
+    background: var(--primary-color);
+    border: 1px dashed var(--primary-dark);
+    padding: 8px;
+    border-radius: 10px;
+    color: var(--element-active-text);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+}
 
-                .draw-btn:hover:not(:disabled) {
-                    background: var(--primary-dark);
-                    transform: scale(1.05);
-                }
+.draw-btn:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
 
-                .draw-btn:disabled {
-                    background: rgba(255, 105, 180, 0.5);
-                    cursor: not-allowed;
-                }
+.draw-btn:disabled {
+    background: rgba(255, 105, 180, 0.5);
+    cursor: not-allowed;
+}
 
-                .kawaii-footer {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    margin-top: 10px;
-                    padding: 6px;
-                    background: var(--element-bg);
-                    border-radius: 10px;
-                    border: 2px solid var(--primary-color);
-                }
+.kawaii-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    padding: 6px;
+    background: var(--element-bg);
+    border-radius: 10px;
+    border: 2px solid var(--primary-color);
+}
 
-                .credit-text {
-                    font-size: 10px;
-                    color: var(--text-color);
-                    font-weight: 700;
-                }
+.credit-text {
+    font-size: 10px;
+    color: var(--text-color);
+    font-weight: 700;
+}
 
-                .kawaii-notifications {
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 10px;
-                    z-index: 2000;
-                    pointer-events: none;
-                }
+.kawaii-notifications {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 2000;
+    pointer-events: none;
+}
 
-                .kawaii-notification {
-                    background: var(--panel-bg);
-                    border: 2px solid var(--panel-border);
-                    border-radius: 12px;
-                    padding: 12px 18px;
-                    color: var(--text-color);
-                    font-family: 'M PLUS Rounded 1c', sans-serif;
-                    font-size: 14px;
-                    font-weight: 700;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    max-width: 300px;
-                    opacity: 0;
-                    transform: translateX(100%);
-                    transition: opacity 0.3s ease, transform 0.3s ease;
-                    pointer-events: auto;
-                }
+.kawaii-notification {
+    background: var(--panel-bg);
+    border: 2px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 12px 18px;
+    color: var(--text-color);
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 300px;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: auto;
+    gap: 8px;
+    padding: 12px 12px;
+}
 
-                .kawaii-notification.show {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
+.kawaii-notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
 
-                .kawaii-notification-icon {
-                    font-size: 20px;
-                    color: var(--primary-dark);
-                    animation: bounce 1s infinite ease-in-out;
-                }
+.kawaii-notification-icon {
+    font-size: 20px;
+    color: var(--primary-dark);
+    animation: bounce 1s infinite ease-in-out;
+}
 
-                @keyframes bounce {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-5px); }
-                }
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
 
-                .kawaii-notification-close {
-                    background: transparent;
-                    border: 1px dashed var(--primary-dark);
-                    border-radius: 6px;
-                    width: 20px;
-                    height: 20px;
-                    color: var(--primary-dark);
-                    font-size: 12px;
-                    line-height: 18px;
-                    text-align: center;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                }
+.kawaii-notification-button {
+    background: var(--primary-color);
+    border: 1px dashed var(--primary-dark);
+    border-radius: 6px;
+    padding: 4px 8px;
+    color: var(--element-active-text);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+        }
 
-                .kawaii-notification-close:hover {
-                    background: var(--primary-dark);
-                    color: var(--element-active-text);
-                    transform: scale(1.1);
-                }
-            `;
+.kawaii-notification-button:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+.kawaii-notification-close {
+    background: transparent;
+    border: 1px dashed var(--primary-dark);
+    border-radius: 6px;
+    width: 20px;
+    height: 20px;
+    color: var(--primary-dark);
+    font-size: 12px;
+    line-height: 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: auto;
+}
+
+.kawaii-notification-close:hover {
+    background: var(--primary-dark);
+    color: var(--element-active-text);
+    transform: scale(1.1);
+}
+`;
             document.head.appendChild(style);
             this.updateLanguage();
             [this.elements.guessSpeed, this.elements.drawSpeed, this.elements.maxColors].forEach(this.updateSliderTrack.bind(this));
