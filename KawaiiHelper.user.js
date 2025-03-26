@@ -36,6 +36,7 @@
                     "No matches found ✧": "No matches found ✧",
                     "Tried Words": "Tried Words",
                     "Drop image here or click to upload": "Drop image here or click to upload",
+                    "Search on Google Images": "Search on Google Images",
                     "Draw Speed": "Draw Speed",
                     "Max Colors": "Max Colors",
                     "Draw Now ✧": "Draw Now ✧",
@@ -71,6 +72,7 @@
                     "No matches found ✧": "Eşleşme bulunamadı ✧",
                     "Tried Words": "Denenen Kelimeler",
                     "Drop image here or click to upload": "Resmi buraya bırak veya yüklemek için tıkla",
+                    "Search on Google Images": "Search on Google Images",
                     "Draw Speed": "Çizim Hızı",
                     "Max Colors": "Maksimum Renk",
                     "Draw Now ✧": "Şimdi Çiz ✧",
@@ -362,6 +364,10 @@
                             </div>
                         </div>
                     </div>
+                    <button class="google-search-btn" id="googleSearchBtn">
+                        <span data-translate="Search on Google Images">Search on Google</span>
+                        <span class="search-icon">🡵</span>
+                    </button>
                     <div class="slider-container">
                         <div class="slider-label" data-translate="Draw Speed">Draw Speed</div>
                         <div class="custom-slider">
@@ -426,6 +432,7 @@
                 imagePreview: document.getElementById('imagePreview'),
                 previewImg: document.getElementById('previewImg'),
                 cancelImage: document.getElementById('cancelImage'),
+                googleSearchBtn: document.getElementById('googleSearchBtn'),
                 drawSpeed: document.getElementById('drawSpeed'),
                 drawSpeedValue: document.getElementById('drawSpeedValue'),
                 maxColors: document.getElementById('maxColors'),
@@ -1147,6 +1154,43 @@
                     color: var(--element-active-text);
                     transform: scale(1.1);
                 }
+
+                .google-search-btn {
+                    background: var(--primary-color);
+                    border: 1px dashed var(--primary-dark);
+                    border-radius: 8px;
+                    padding: 6px 10px;
+                    color: var(--element-active-text);
+                    font-size: 12px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: background 0.3s ease, transform 0.3s ease;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    width: 100%;
+                    box-sizing: border-box;
+                    height: 30px;
+                }
+
+                .google-search-btn span {
+                    display: inline-block;
+                }
+
+                .google-search-btn .search-icon {
+                    margin-left: 8px;
+                    font-size: 14px;
+                }
+
+                .google-search-btn:hover {
+                    background: var(--primary-dark);
+                    transform: scale(1.03);
+                }
+
+                .google-search-btn:disabled {
+                    background: rgba(255, 105, 180, 0.5);
+                    cursor: not-allowed;
+                }
             `;
             document.head.appendChild(style);
             this.updateLanguage();
@@ -1225,6 +1269,15 @@
             this.elements.imageDropzone.addEventListener('drop', this.handleImageDrop.bind(this));
             this.elements.imageUpload.addEventListener('change', this.handleImageInput.bind(this));
             this.elements.cancelImage.addEventListener('click', this.cancelImagePreview.bind(this));
+            this.elements.googleSearchBtn.addEventListener('click', () => {
+                if (!window.game || !window.game._palavra || !window.game.turn) {
+                    this.showNotification(this.localize("Game not ready or not your turn! ✧"), 3000);
+                    return;
+                }
+                const word = window.game._palavra;
+                const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(word)}+vectorial&tbm=isch`;
+                window.open(searchUrl, '_blank');
+            });
             this.elements.drawSpeed.addEventListener('input', (e) => {
                 this.updateDrawSpeed(e);
                 this.saveSettings();
