@@ -1394,8 +1394,8 @@
             this.state.triedLabelAdded = false;
 
             const activeTheme = this.elements.customWordsCheckbox.checked || !window.game || !window.game._dadosSala || !window.game._dadosSala.tema
-                ? "Custom"
-                : window.game._dadosSala.tema;
+            ? "Custom"
+            : window.game._dadosSala.tema;
             const activeList = this.wordList[activeTheme] || [];
 
             if (!pattern) {
@@ -1554,6 +1554,7 @@
                 const imgTop = offsetY;
                 const imgBottom = offsetY + newHeight - 1;
 
+                // Background detection
                 const colorCounts = new Map();
                 const sampleStep = Math.max(1, Math.floor(newWidth / 50));
                 for (let x = imgLeft; x <= imgRight; x += sampleStep) {
@@ -1592,6 +1593,7 @@
                 ctx.fillRect(0, 0, canvasWidth, canvasHeight);
                 await new Promise(resolve => setTimeout(resolve, drawSpeedValue));
 
+                // Color detection
                 const colorClusters = new Map();
                 const finerSampleStep = Math.max(1, Math.floor(newWidth / 100));
                 for (let y = imgTop; y <= imgBottom; y += finerSampleStep) {
@@ -1605,20 +1607,22 @@
                 }
 
                 const topColors = [...colorClusters.entries()]
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, maxColorsValue)
-                    .map(([key]) => ({
-                        rgb: key.split(',').map(Number),
-                        hex: 'x' + key.split(',').map(c => Number(c).toString(16).padStart(2, '0').toUpperCase()).join('')
-                    }));
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, maxColorsValue)
+                .map(([key]) => ({
+                    rgb: key.split(',').map(Number),
+                    hex: 'x' + key.split(',').map(c => Number(c).toString(16).padStart(2, '0').toUpperCase()).join('')
+                }));
 
                 const visited = new Set();
+                let lastPenSize = null;
+
                 const getColorAt = (x, y) => {
                     const index = (y * canvasWidth + x) * 4;
                     return [data[index], data[index + 1], data[index + 2]];
                 };
 
-                const traceAndGroupRegion = (startX, startY, targetColor) => {
+                const traceRegion = (startX, startY, targetColor) => {
                     const stack = [[startX, startY]];
                     const regionCoords = [];
                     const visitedInRegion = new Set();
@@ -1638,24 +1642,92 @@
                         }
 
                         const pixelColor = getColorAt(x, y);
-                        if (this.colorDistance(pixelColor, targetColor) <= 10) {
+                        if (this.colorDistance(pixelColor, targetColor) <= 15) { // Daha hassas eşleştirme
                             visitedInRegion.add(key);
                             regionCoords.push([x, y]);
                             stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
                         }
                     }
 
-                    if (regionCoords.length < 5) return [];
-
+                    if (regionCoords.length < 5) return null;
                     visitedInRegion.forEach(k => visited.add(k));
+                    return regionCoords;
+                };
 
+                const getOutline = (region, targetColor) => {
+                    const outline = [];
+                    const edgeSet = new Set();
+                    const dirs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+
+                    for (const [x, y] of region) {
+                        const key = `${x},${y}`;
+                        if (edgeSet.has(key)) continue;
+
+                        let isEdge = false;
+                        for (const [dx, dy] of dirs) {
+                            const nx = x + dx;
+                            const ny = y + dy;
+                            const neighborKey = `${nx},${ny}`;
+                            if (!visited.has(neighborKey)) {
+                                const neighborColor = getColorAt(nx, ny);
+                                if (this.colorDistance(neighborColor, targetColor) > 15) {
+                                    isEdge = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (isEdge) {
+                            outline.push([x, y]);
+                            edgeSet.add(key);
+                        }
+                    }
+
+                    if (outline.length <= 1) return outline;
+                    const path = [outline[0]];
+                    const used = new Set([`${outline[0][0]},${outline[0][1]}`]);
+                    let current = outline[0];
+
+                    while (used.size < outline.length) {
+                        const next = outline.find(([x, y]) => !used.has(`${x},${y}`) && Math.hypot(x - current[0], y - current[1]) <= Math.sqrt(2));
+                        if (!next) break;
+                        path.push(next);
+                        used.add(`${next[0]},${next[1]}`);
+                        current = next;
+                    }
+                    return path.length > 4 ? path : outline;
+                };
+
+                const drawOutline = async (outline, region, targetColor) => {
+                    const regionSize = region.length;
+                    const penSize = regionSize > 500 ? 8 : regionSize > 200 ? 6 : 2;
+
+                    if (lastPenSize !== penSize) {
+                        window.game._socket.emit(10, window.game._codigo, [6, penSize]);
+                        ctx.lineWidth = penSize;
+                        lastPenSize = penSize;
+                    }
+
+                    if (outline.length > 1) {
+                        const command = [2, ...outline.flat()];
+                        window.game._socket.emit(10, window.game._codigo, command);
+                        ctx.beginPath();
+                        ctx.moveTo(outline[0][0], outline[0][1]);
+                        for (let i = 1; i < outline.length; i++) {
+                            ctx.lineTo(outline[i][0], outline[i][1]);
+                        }
+                        ctx.stroke();
+                        await new Promise(resolve => setTimeout(resolve, drawSpeedValue));
+                    }
+                };
+
+                const fillRegion = async (region) => {
                     const fills = [];
                     let currentRow = [];
                     let lastY = null;
 
-                    regionCoords.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+                    region.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
 
-                    for (const [x, y] of regionCoords) {
+                    for (const [x, y] of region) {
                         if (lastY !== y) {
                             if (currentRow.length > 0) {
                                 const minX = Math.min(...currentRow);
@@ -1673,7 +1745,12 @@
                         fills.push([minX, lastY, maxX - minX + 1, 1]);
                     }
 
-                    return fills;
+                    if (fills.length > 0) {
+                        const fillCommand = [3, ...fills.flat()];
+                        window.game._socket.emit(10, window.game._codigo, fillCommand);
+                        fills.forEach(([x, y, w, h]) => ctx.fillRect(x, y, w, h));
+                        await new Promise(resolve => setTimeout(resolve, drawSpeedValue));
+                    }
                 };
 
                 const drawRegions = async () => {
@@ -1690,11 +1767,11 @@
                             if (this.colorDistance(pixelColor, backgroundColor) <= 30) continue;
 
                             const nearestColor = topColors.reduce((prev, curr) =>
-                                this.colorDistance(pixelColor, prev.rgb) < this.colorDistance(pixelColor, curr.rgb) ? prev : curr
-                            );
+                                                                  this.colorDistance(pixelColor, prev.rgb) < this.colorDistance(pixelColor, curr.rgb) ? prev : curr
+                                                                 );
 
-                            const fills = traceAndGroupRegion(x, y, nearestColor.rgb);
-                            if (fills.length === 0) continue;
+                            const region = traceRegion(x, y, nearestColor.rgb);
+                            if (!region) continue;
 
                             if (!this.isDrawingActive || !window.game.turn) {
                                 this.stopDrawing();
@@ -1702,15 +1779,15 @@
                             }
 
                             window.game._socket.emit(10, window.game._codigo, [5, nearestColor.hex]);
+                            ctx.strokeStyle = `#${nearestColor.hex.slice(1)}`;
                             ctx.fillStyle = `#${nearestColor.hex.slice(1)}`;
-                            const fillCommand = [3];
-                            fills.forEach(([x, y, w, h]) => {
-                                fillCommand.push(x, y, w, h);
-                                ctx.fillRect(x, y, w, h);
-                            });
-                            window.game._socket.emit(10, window.game._codigo, fillCommand);
 
-                            await new Promise(resolve => setTimeout(resolve, drawSpeedValue));
+                            const outline = getOutline(region, nearestColor.rgb);
+                            await drawOutline(outline, region, nearestColor.rgb);
+
+                            if (region.length > 50) { // Sadece büyük bölgeler doldurulacak
+                                await fillRegion(region);
+                            }
                         }
                     }
                 };
