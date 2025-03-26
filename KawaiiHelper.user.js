@@ -72,7 +72,7 @@
                     "No matches found ✧": "Eşleşme bulunamadı ✧",
                     "Tried Words": "Denenen Kelimeler",
                     "Drop image here or click to upload": "Resmi buraya bırak veya yüklemek için tıkla",
-                    "Search on Google Images": "Search on Google Images",
+                    "Search on Google Images": "Google Görsellerde Ara",
                     "Draw Speed": "Çizim Hızı",
                     "Max Colors": "Maksimum Renk",
                     "Draw Now ✧": "Şimdi Çiz ✧",
