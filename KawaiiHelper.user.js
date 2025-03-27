@@ -1582,10 +1582,6 @@
 
                 const tempCanvas = document.createElement('canvas');
                 const tempCtx = tempCanvas.getContext('2d');
-                if (!tempCtx) {
-                    this.showNotification(this.localize("Temp canvas context failed! ✧"), 3000);
-                    return;
-                }
                 tempCanvas.width = canvasWidth;
                 tempCanvas.height = canvasHeight;
 
@@ -1607,7 +1603,7 @@
                 const imgTop = offsetY;
                 const imgBottom = offsetY + newHeight - 1;
 
-                // Background detection
+                // Arka plan rengini tespit et
                 const colorCounts = new Map();
                 const sampleStep = Math.max(1, Math.floor(newWidth / 50));
                 for (let x = imgLeft; x <= imgRight; x += sampleStep) {
@@ -1634,7 +1630,7 @@
                 }
                 window.game._socket.emit(10, window.game._codigo, [4]);
                 ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-                await new Promise(resolve => setTimeout(resolve, drawSpeedValue));
+                await new Promise(resolve => setTimeout(resolve, drawSpeedValue / 2));
 
                 if (!this.isDrawingActive || !window.game.turn) {
                     this.stopDrawing();
@@ -1644,16 +1640,16 @@
                 window.game._socket.emit(10, window.game._codigo, [3, 0, 0, canvasWidth, canvasHeight]);
                 ctx.fillStyle = `#${bgHex.slice(1)}`;
                 ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-                await new Promise(resolve => setTimeout(resolve, drawSpeedValue));
+                await new Promise(resolve => setTimeout(resolve, drawSpeedValue / 2));
 
-                // Color detection
+                // Renk kümelerini tespit et (detaylar için daha fazla renk)
                 const colorClusters = new Map();
-                const finerSampleStep = Math.max(1, Math.floor(newWidth / 100));
+                const finerSampleStep = 1; // Her pikseli tara
                 for (let y = imgTop; y <= imgBottom; y += finerSampleStep) {
                     for (let x = imgLeft; x <= imgRight; x += finerSampleStep) {
                         const index = (y * canvasWidth + x) * 4;
                         const key = `${data[index]},${data[index + 1]},${data[index + 2]}`;
-                        if (this.colorDistance([data[index], data[index + 1], data[index + 2]], backgroundColor) > 30) {
+                        if (this.colorDistance([data[index], data[index + 1], data[index + 2]], backgroundColor) > 15) { // Daha hassas eşik
                             colorClusters.set(key, (colorClusters.get(key) || 0) + 1);
                         }
                     }
@@ -1661,7 +1657,7 @@
 
                 const topColors = [...colorClusters.entries()]
                 .sort((a, b) => b[1] - a[1])
-                .slice(0, maxColorsValue)
+                .slice(0, Math.min(maxColorsValue, 50)) // Daha fazla renk için üst sınırı artır
                 .map(([key]) => ({
                     rgb: key.split(',').map(Number),
                     hex: 'x' + key.split(',').map(c => Number(c).toString(16).padStart(2, '0').toUpperCase()).join('')
@@ -1695,14 +1691,14 @@
                         }
 
                         const pixelColor = getColorAt(x, y);
-                        if (this.colorDistance(pixelColor, targetColor) <= 15) { // Daha hassas eşleştirme
+                        if (this.colorDistance(pixelColor, targetColor) <= 10) { // Daha hassas eşik
                             visitedInRegion.add(key);
                             regionCoords.push([x, y]);
                             stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
                         }
                     }
 
-                    if (regionCoords.length < 5) return null;
+                    if (regionCoords.length < 3) return null; // Çok küçük bölgeleri bile kabul et
                     visitedInRegion.forEach(k => visited.add(k));
                     return regionCoords;
                 };
@@ -1723,7 +1719,7 @@
                             const neighborKey = `${nx},${ny}`;
                             if (!visited.has(neighborKey)) {
                                 const neighborColor = getColorAt(nx, ny);
-                                if (this.colorDistance(neighborColor, targetColor) > 15) {
+                                if (this.colorDistance(neighborColor, targetColor) > 10) {
                                     isEdge = true;
                                     break;
                                 }
@@ -1747,12 +1743,12 @@
                         used.add(`${next[0]},${next[1]}`);
                         current = next;
                     }
-                    return path.length > 4 ? path : outline;
+                    return path.length > 2 ? path : outline;
                 };
 
                 const drawOutline = async (outline, region, targetColor) => {
                     const regionSize = region.length;
-                    const penSize = regionSize > 500 ? 8 : regionSize > 200 ? 6 : 2;
+                    const penSize = regionSize > 200 ? 8 : regionSize > 50 ? 4 : 2; // Daha küçük pen size ile detay
 
                     if (lastPenSize !== penSize) {
                         window.game._socket.emit(10, window.game._codigo, [6, penSize]);
@@ -1774,33 +1770,56 @@
                 };
 
                 const fillRegion = async (region) => {
+                    const canvasWidth = window.game._desenho._canvas.canvas.width;
+                    const visitedInFill = new Set(region.map(([x, y]) => `${x},${y}`)); // Bölgedeki pikseller
                     const fills = [];
-                    let currentRow = [];
-                    let lastY = null;
+                    const stack = [];
 
-                    region.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+                    // Bölgedeki bir başlangıç noktası seç
+                    const [startX, startY] = region[0];
+                    stack.push([startX, startY]);
 
-                    for (const [x, y] of region) {
-                        if (lastY !== y) {
-                            if (currentRow.length > 0) {
-                                const minX = Math.min(...currentRow);
-                                const maxX = Math.max(...currentRow);
-                                fills.push([minX, lastY, maxX - minX + 1, 1]);
-                                currentRow = [];
-                            }
-                            lastY = y;
+                    while (stack.length > 0) {
+                        let [x, y] = stack.pop();
+                        let leftX = x;
+                        let rightX = x;
+
+                        // Sol sınırı bul
+                        while (leftX - 1 >= 0 && visitedInFill.has(`${leftX - 1},${y}`)) {
+                            leftX--;
                         }
-                        currentRow.push(x);
-                    }
-                    if (currentRow.length > 0) {
-                        const minX = Math.min(...currentRow);
-                        const maxX = Math.max(...currentRow);
-                        fills.push([minX, lastY, maxX - minX + 1, 1]);
+
+                        // Sağ sınırı bul
+                        while (rightX + 1 < canvasWidth && visitedInFill.has(`${rightX + 1},${y}`)) {
+                            rightX++;
+                        }
+
+                        // Bu satırdaki dikdörtgeni ekle
+                        const width = rightX - leftX + 1;
+                        fills.push([leftX, y, width, 1]);
+
+                        // Üst ve alt satırları tara
+                        for (let scanX = leftX; scanX <= rightX; scanX++) {
+                            const above = `${scanX},${y - 1}`;
+                            const below = `${scanX},${y + 1}`;
+                            if (y - 1 >= 0 && visitedInFill.has(above) && !fills.some(f => f[1] === y - 1 && f[0] <= scanX && scanX < f[0] + f[2])) {
+                                stack.push([scanX, y - 1]);
+                            }
+                            if (y + 1 < canvasHeight && visitedInFill.has(below) && !fills.some(f => f[1] === y + 1 && f[0] <= scanX && scanX < f[0] + f[2])) {
+                                stack.push([scanX, y + 1]);
+                            }
+                        }
+
+                        // İşlenen pikselleri visited olarak işaretle
+                        for (let scanX = leftX; scanX <= rightX; scanX++) {
+                            visitedInFill.delete(`${scanX},${y}`); // Tekrar işlenmesin
+                        }
                     }
 
                     if (fills.length > 0) {
                         const fillCommand = [3, ...fills.flat()];
                         window.game._socket.emit(10, window.game._codigo, fillCommand);
+                        const ctx = window.game._desenho._canvas.canvas.getContext('2d');
                         fills.forEach(([x, y, w, h]) => ctx.fillRect(x, y, w, h));
                         await new Promise(resolve => setTimeout(resolve, drawSpeedValue));
                     }
@@ -1817,7 +1836,7 @@
                             if (visited.has(key)) continue;
 
                             const pixelColor = getColorAt(x, y);
-                            if (this.colorDistance(pixelColor, backgroundColor) <= 30) continue;
+                            if (this.colorDistance(pixelColor, backgroundColor) <= 15) continue;
 
                             const nearestColor = topColors.reduce((prev, curr) =>
                                                                   this.colorDistance(pixelColor, prev.rgb) < this.colorDistance(pixelColor, curr.rgb) ? prev : curr
@@ -1838,7 +1857,7 @@
                             const outline = getOutline(region, nearestColor.rgb);
                             await drawOutline(outline, region, nearestColor.rgb);
 
-                            if (region.length > 50) { // Sadece büyük bölgeler doldurulacak
+                            if (region.length > 20) { // Daha küçük eşik ile dolgu
                                 await fillRegion(region);
                             }
                         }
@@ -1865,15 +1884,11 @@
         }
 
         colorDistance(color1, color2) {
-            const rMean = (color1[0] + color2[0]) / 2;
-            const r = color1[0] - color2[0];
-            const g = color1[1] - color2[1];
-            const b = color1[2] - color2[2];
-            return Math.sqrt(
-                (2 + rMean / 256) * r * r +
-                4 * g * g +
-                (2 + (255 - rMean) / 256) * b * b
-            );
+            if (!color1 || !color2) return Infinity;
+            const rDiff = color1[0] - color2[0];
+            const gDiff = color1[1] - color2[1];
+            const bDiff = color1[2] - color2[2];
+            return Math.sqrt(rDiff * rDiff + gDiff * gDiff + bDiff * bDiff);
         }
     }
 
