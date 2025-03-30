@@ -360,10 +360,7 @@
                             </div>
                         </div>
                     </div>
-                    <button class="google-search-btn" id="googleSearchBtn">
-                        <span data-translate="Search on Google Images">Search on Google</span>
-                        <span class="search-icon">🡵</span>
-                    </button>
+                    <button class="google-search-btn" id="googleSearchBtn">Search on Google 🡵</button>
                     <div class="slider-container">
                         <div class="slider-label" data-translate="Draw Speed">Draw Speed</div>
                         <div class="custom-slider">
@@ -1161,21 +1158,10 @@
                     font-weight: 700;
                     cursor: pointer;
                     transition: background 0.3s ease, transform 0.3s ease;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
                     width: 100%;
                     box-sizing: border-box;
                     height: 30px;
-                }
-
-                .google-search-btn span {
-                    display: inline-block;
-                }
-
-                .google-search-btn .search-icon {
-                    margin-left: 8px;
-                    font-size: 14px;
+                    text-align: center; /* Metni ortalamak için */
                 }
 
                 .google-search-btn:hover {
