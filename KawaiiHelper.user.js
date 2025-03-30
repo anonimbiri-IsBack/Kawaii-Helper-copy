@@ -2,7 +2,7 @@
 // @name         Kawaii Helper & Drawing Bot for Gartic.io
 // @name:tr      Gartic.io için Kawaii Yardımcı & Çizim Botu
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-25
+// @version      2025-03-30
 // @description  Helper for Gartic.io with auto-guess, drawing assistance, and drawing bot
 // @description:tr  Gartic.io için otomatik tahmin, çizim yardımı ve çizim botu ile yardımcı
 // @author       anonimbiri & Gartic-Developers
@@ -18,7 +18,7 @@
 
     class KawaiiHelper {
         constructor() {
-            this.SCRIPT_VERSION = "2025-03-25";
+            this.SCRIPT_VERSION = "2025-03-30";
 
             this.translations = {
                 en: {
@@ -38,7 +38,7 @@
                     "Drop image here or click to upload": "Drop image here or click to upload",
                     "Search on Google Images": "Search on Google Images",
                     "Draw Speed": "Draw Speed",
-                    "Max Colors": "Max Colors",
+                    "Color Tolerance": "Color Tolerance",
                     "Draw Now ✧": "Draw Now ✧",
                     "Made with ♥ by Anonimbiri & Gartic-Developers": "Made with ♥ by Anonimbiri & Gartic-Developers",
                     "Loaded ${wordList['Custom'].length} words from ${file.name}": "Loaded ${wordList['Custom'].length} words from ${file.name}",
@@ -74,7 +74,7 @@
                     "Drop image here or click to upload": "Resmi buraya bırak veya yüklemek için tıkla",
                     "Search on Google Images": "Google Görsellerde Ara",
                     "Draw Speed": "Çizim Hızı",
-                    "Max Colors": "Maksimum Renk",
+                    "Color Tolerance": "Renk Toleransı",
                     "Draw Now ✧": "Şimdi Çiz ✧",
                     "Made with ♥ by Anonimbiri & Gartic-Developers": "Anonimbiri & Gartic-Developers tarafından ♥ ile yapıldı",
                     "Loaded ${wordList['Custom'].length} words from ${file.name}": "${file.name} dosyasından ${wordList['Custom'].length} kelime yüklendi",
@@ -141,7 +141,6 @@
                     }
                 }
             } catch (e) {
-                console.error('Update error:', e);
             }
         }
 
@@ -155,8 +154,8 @@
                 noKickCooldown: false,
                 chatBypassCensorship: false,
                 drawSpeed: 200,
-                maxColors: 100,
-                position: null // Add position to settings
+                colorTolerance: 20,
+                position: null
             };
         }
 
@@ -169,7 +168,7 @@
                 noKickCooldown: this.elements.noKickCooldownCheckbox.checked,
                 chatBypassCensorship: this.elements.chatBypassCensorship.checked,
                 drawSpeed: parseInt(this.elements.drawSpeed.value),
-                maxColors: parseInt(this.elements.maxColors.value),
+                colorTolerance: parseInt(this.elements.colorTolerance.value),
                 position: {
                     x: this.state.xOffset,
                     y: this.state.yOffset
@@ -260,8 +259,7 @@
                 mutations.forEach((mutation) => {
                     if (mutation.addedNodes) {
                         Array.from(mutation.addedNodes).forEach((node) => {
-                            if (node.nodeName.toLowerCase() === 'script' && node.src && node.src.includes('room')) {
-                                console.log('Target script detected:', node.src);
+                            if (node.nodeName.toLowerCase() === 'script' && node.src && node.src.includes('room') && !node.src.includes('rooms')) {
                                 node.remove();
                                 node.src = '';
                                 node.textContent = '';
@@ -269,7 +267,6 @@
                                 window.kawaiiHelper = this;
                                 Function(newScript)();
                             } else if (node.nodeName.toLowerCase() === 'script' && node.src && node.src.includes('create')) {
-                                console.log('Target script detected:', node.src);
                                 node.remove();
                                 node.src = '';
                                 node.textContent = '';
@@ -377,12 +374,12 @@
                         </div>
                     </div>
                     <div class="slider-container">
-                        <div class="slider-label" data-translate="Max Colors">Max Colors</div>
-                        <div class="custom-slider">
-                            <input type="range" id="maxColors" min="3" max="1000" value="100" step="1">
-                            <div class="slider-track"></div>
-                            <span id="maxColorsValue">100</span>
-                        </div>
+                         <div class="slider-label" data-translate="Color Tolerance">Color Tolerance</div>
+                         <div class="custom-slider">
+                             <input type="range" id="colorTolerance" min="5" max="100" value="20" step="1">
+                             <div class="slider-track"></div>
+                             <span id="colorToleranceValue">20</span>
+                         </div>
                     </div>
                     <button class="draw-btn" id="sendDraw" disabled data-translate="Draw Now ✧">Draw Now ✧</button>
                 </div>
@@ -435,8 +432,8 @@
                 googleSearchBtn: document.getElementById('googleSearchBtn'),
                 drawSpeed: document.getElementById('drawSpeed'),
                 drawSpeedValue: document.getElementById('drawSpeedValue'),
-                maxColors: document.getElementById('maxColors'),
-                maxColorsValue: document.getElementById('maxColorsValue'),
+                colorTolerance: document.getElementById('colorTolerance'),
+                colorToleranceValue: document.getElementById('colorToleranceValue'),
                 sendDraw: document.getElementById('sendDraw'),
                 autoKickCheckbox: document.getElementById('autoKick'),
                 noKickCooldownCheckbox: document.getElementById('noKickCooldown'),
@@ -468,7 +465,7 @@
                     this.state.xOffset = initialX;
                     this.state.yOffset = initialY;
                     this.elements.kawaiiCheat.classList.add('load-animation');
-                    this.saveSettings(); // Save initial position
+                    this.saveSettings();
                 } else {
                     requestAnimationFrame(waitForRender);
                 }
@@ -484,13 +481,13 @@
             this.elements.noKickCooldownCheckbox.checked = this.settings.noKickCooldown;
             this.elements.chatBypassCensorship.checked = this.settings.chatBypassCensorship;
             this.elements.drawSpeed.value = this.settings.drawSpeed;
-            this.elements.maxColors.value = this.settings.maxColors;
+            this.elements.colorToleranceValue.value = this.settings.colorToleranceValue;
 
             this.elements.speedContainer.style.display = this.settings.autoGuess ? 'flex' : 'none';
             this.elements.wordListContainer.style.display = this.settings.customWords ? 'block' : 'none';
             this.updateGuessSpeed({ target: this.elements.guessSpeed });
             this.updateDrawSpeed({ target: this.elements.drawSpeed });
-            this.updateMaxColors({ target: this.elements.maxColors });
+            this.updateColorTolerance({ target: this.elements.colorTolerance });
         }
 
         addStyles() {
@@ -1194,7 +1191,7 @@
             `;
             document.head.appendChild(style);
             this.updateLanguage();
-            [this.elements.guessSpeed, this.elements.drawSpeed, this.elements.maxColors].forEach(this.updateSliderTrack.bind(this));
+            [this.elements.guessSpeed, this.elements.drawSpeed, this.elements.colorTolerance].forEach(this.updateSliderTrack.bind(this));
         }
 
         updateLanguage() {
@@ -1282,8 +1279,8 @@
                 this.updateDrawSpeed(e);
                 this.saveSettings();
             });
-            this.elements.maxColors.addEventListener('input', (e) => {
-                this.updateMaxColors(e);
+            this.elements.colorTolerance.addEventListener('input', (e) => {
+                this.updateColorTolerance(e);
                 this.saveSettings();
             });
             this.elements.sendDraw.addEventListener('click', this.startDrawing.bind(this));
@@ -1323,7 +1320,7 @@
                 this.elements.kawaiiCheat.style.top = `${newY}px`;
                 this.state.xOffset = newX;
                 this.state.yOffset = newY;
-                this.saveSettings(); // Save position while dragging
+                this.saveSettings();
             });
         }
 
@@ -1332,7 +1329,7 @@
                 this.state.isDragging = false;
                 this.elements.kawaiiCheat.classList.remove('dragging');
                 if (this.state.rafId) cancelAnimationFrame(this.state.rafId);
-                this.saveSettings(); // Save final position
+                this.saveSettings();
             }
         }
 
@@ -1485,9 +1482,7 @@
                     if (!response.ok) throw new Error(`Failed to fetch ${theme} word list`);
                     const data = await response.json();
                     this.wordList[theme] = data.words || data;
-                    console.log(`Loaded ${this.wordList[theme].length} words for ${theme}`);
                 } catch (error) {
-                    console.error(`Error fetching word list for ${theme}:`, error);
                     this.wordList[theme] = [];
                 }
             }
@@ -1531,9 +1526,9 @@
             this.elements.drawSpeedValue.textContent = e.target.value >= 1000 ? `${e.target.value / 1000}s` : `${e.target.value}ms`;
         }
 
-        updateMaxColors(e) {
+        updateColorTolerance(e) {
             this.updateSliderTrack(e.target);
-            this.elements.maxColorsValue.textContent = e.target.value;
+            this.elements.colorToleranceValue.textContent = e.target.value;
         }
 
         startDrawing() {
@@ -1560,30 +1555,43 @@
             }, 100);
         }
 
-        processAndDrawImage(imageSrc) {
-            if (!window.game || !window.game._socket || !window.game._desenho || !window.game.turn || !this.isDrawingActive) {
+        async processAndDrawImage(imageSrc) {
+            if (!this.isDrawingActive || !window.game || !window.game._socket || !window.game._desenho || !window.game.turn) {
                 this.showNotification(this.localize("Game not ready or not your turn! ✧"), 3000);
-                this.elements.sendDraw.disabled = false;
+                this.stopDrawing();
                 return;
             }
 
             const img = new Image();
             img.crossOrigin = "Anonymous";
+
             img.onload = async () => {
-                const gameCanvas = window.game._desenho._canvas.canvas;
-                const ctx = gameCanvas.getContext('2d');
-                if (!ctx) {
-                    this.showNotification(this.localize("Canvas context not available! ✧"), 3000);
+                if (!this.isDrawingActive) return;
+
+                let gameCanvas, ctx, canvasWidth, canvasHeight;
+                try {
+                    gameCanvas = window.game._desenho._canvas.canvas;
+                    if (!gameCanvas || !(gameCanvas instanceof HTMLCanvasElement)) throw new Error("Canvas not accessible!");
+                    ctx = gameCanvas.getContext('2d');
+                    if (!ctx) throw new Error("Canvas context not available!");
+                    canvasWidth = Math.floor(gameCanvas.width);
+                    canvasHeight = Math.floor(gameCanvas.height);
+                    if (canvasWidth <= 0 || canvasHeight <= 0) throw new Error("Invalid canvas dimensions!");
+                } catch (e) {
+                    this.showNotification(this.localize(e.message.includes("Canvas not accessible") ? "Canvas not accessible! ✧" : "Canvas context not available! ✧"), 3000);
+                    this.stopDrawing();
                     return;
                 }
 
-                const canvasWidth = Math.floor(gameCanvas.width);
-                const canvasHeight = Math.floor(gameCanvas.height);
-
                 const tempCanvas = document.createElement('canvas');
-                const tempCtx = tempCanvas.getContext('2d');
                 tempCanvas.width = canvasWidth;
                 tempCanvas.height = canvasHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+                if (!tempCtx) {
+                    this.showNotification(this.localize("Temp canvas context failed! ✧"), 3000);
+                    this.stopDrawing();
+                    return;
+                }
 
                 const scale = Math.min(canvasWidth / img.width, canvasHeight / img.height);
                 const newWidth = Math.floor(img.width * scale);
@@ -1591,304 +1599,206 @@
                 const offsetX = Math.floor((canvasWidth - newWidth) / 2);
                 const offsetY = Math.floor((canvasHeight - newHeight) / 2);
 
-                tempCtx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
-                const imageData = tempCtx.getImageData(0, 0, canvasWidth, canvasHeight);
-                const data = imageData.data;
+                let imageData, data;
+                try {
+                    tempCtx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
+                    imageData = tempCtx.getImageData(0, 0, canvasWidth, canvasHeight);
+                    data = imageData.data;
+                } catch (e) {
+                    this.showNotification(this.localize("Image data error: ${e.message} ✧", { "e.message": e.message }), 3000);
+                    this.stopDrawing();
+                    return;
+                }
 
-                const drawSpeedValue = parseInt(this.elements.drawSpeed.value) || 300;
-                const maxColorsValue = parseInt(this.elements.maxColors.value) || 20;
+                const drawSpeedValue = parseInt(this.elements.drawSpeed.value) || 200; // 920ms olarak ayarlıysa bu kullanılacak
+                const colorToleranceValue = parseInt(this.elements.colorTolerance.value) || 20;
 
                 const imgLeft = offsetX;
                 const imgRight = offsetX + newWidth - 1;
                 const imgTop = offsetY;
                 const imgBottom = offsetY + newHeight - 1;
 
-                // Arka plan rengini tespit et
-                const colorCounts = new Map();
-                const sampleStep = Math.max(1, Math.floor(newWidth / 50));
-                for (let x = imgLeft; x <= imgRight; x += sampleStep) {
-                    for (let y of [imgTop, imgBottom]) {
-                        const index = (y * canvasWidth + x) * 4;
-                        const key = `${data[index]},${data[index + 1]},${data[index + 2]}`;
-                        colorCounts.set(key, (colorCounts.get(key) || 0) + 1);
-                    }
-                }
-
-                let backgroundColor = [255, 255, 255];
-                let maxCount = 0;
-                for (const [key, count] of colorCounts) {
-                    if (count > maxCount) {
-                        maxCount = count;
-                        backgroundColor = key.split(',').map(Number);
-                    }
-                }
-                const bgHex = 'x' + backgroundColor.map(c => c.toString(16).padStart(2, '0').toUpperCase()).join('');
-
-                if (!this.isDrawingActive || !window.game.turn) {
-                    this.stopDrawing();
-                    return;
-                }
-                window.game._socket.emit(10, window.game._codigo, [4]);
-                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-                await new Promise(resolve => setTimeout(resolve, drawSpeedValue / 2));
-
-                if (!this.isDrawingActive || !window.game.turn) {
-                    this.stopDrawing();
-                    return;
-                }
-                window.game._socket.emit(10, window.game._codigo, [5, bgHex]);
-                window.game._socket.emit(10, window.game._codigo, [3, 0, 0, canvasWidth, canvasHeight]);
-                ctx.fillStyle = `#${bgHex.slice(1)}`;
-                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-                await new Promise(resolve => setTimeout(resolve, drawSpeedValue / 2));
-
-                // Renk kümelerini tespit et (detaylar için daha fazla renk)
-                const colorClusters = new Map();
-                const finerSampleStep = 1; // Her pikseli tara
-                for (let y = imgTop; y <= imgBottom; y += finerSampleStep) {
-                    for (let x = imgLeft; x <= imgRight; x += finerSampleStep) {
-                        const index = (y * canvasWidth + x) * 4;
-                        const key = `${data[index]},${data[index + 1]},${data[index + 2]}`;
-                        if (this.colorDistance([data[index], data[index + 1], data[index + 2]], backgroundColor) > 15) { // Daha hassas eşik
-                            colorClusters.set(key, (colorClusters.get(key) || 0) + 1);
-                        }
-                    }
-                }
-
-                const topColors = [...colorClusters.entries()]
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, Math.min(maxColorsValue, 50)) // Daha fazla renk için üst sınırı artır
-                .map(([key]) => ({
-                    rgb: key.split(',').map(Number),
-                    hex: 'x' + key.split(',').map(c => Number(c).toString(16).padStart(2, '0').toUpperCase()).join('')
-                }));
+                const backgroundColor = [255, 255, 255]; // Arka plan beyaz varsayımı
 
                 const visited = new Set();
-                let lastPenSize = null;
+                const regions = [];
 
                 const getColorAt = (x, y) => {
+                    if (x < 0 || x >= canvasWidth || y < 0 || y >= canvasHeight) return backgroundColor;
                     const index = (y * canvasWidth + x) * 4;
                     return [data[index], data[index + 1], data[index + 2]];
                 };
 
-                const traceRegion = (startX, startY, targetColor) => {
-                    const stack = [[startX, startY]];
+                const traceRegion = (startX, startY, startColor, tolerance) => {
                     const regionCoords = [];
-                    const visitedInRegion = new Set();
+                    const stack = [[startX, startY]];
+                    const visitedInRegion = new Set([`${startX},${startY}`]);
 
                     while (stack.length > 0) {
                         const [x, y] = stack.pop();
                         const key = `${x},${y}`;
-                        if (
-                            visited.has(key) ||
-                            visitedInRegion.has(key) ||
-                            x < imgLeft ||
-                            x > imgRight ||
-                            y < imgTop ||
-                            y > imgBottom
-                        ) {
+
+                        if (visited.has(key) || x < imgLeft || x > imgRight || y < imgTop || y > imgBottom) {
                             continue;
                         }
 
                         const pixelColor = getColorAt(x, y);
-                        if (this.colorDistance(pixelColor, targetColor) <= 10) { // Daha hassas eşik
-                            visitedInRegion.add(key);
+
+                        if (this.colorDistance(pixelColor, startColor) <= tolerance) {
                             regionCoords.push([x, y]);
-                            stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
-                        }
-                    }
-
-                    if (regionCoords.length < 3) return null; // Çok küçük bölgeleri bile kabul et
-                    visitedInRegion.forEach(k => visited.add(k));
-                    return regionCoords;
-                };
-
-                const getOutline = (region, targetColor) => {
-                    const outline = [];
-                    const edgeSet = new Set();
-                    const dirs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-
-                    for (const [x, y] of region) {
-                        const key = `${x},${y}`;
-                        if (edgeSet.has(key)) continue;
-
-                        let isEdge = false;
-                        for (const [dx, dy] of dirs) {
-                            const nx = x + dx;
-                            const ny = y + dy;
-                            const neighborKey = `${nx},${ny}`;
-                            if (!visited.has(neighborKey)) {
-                                const neighborColor = getColorAt(nx, ny);
-                                if (this.colorDistance(neighborColor, targetColor) > 10) {
-                                    isEdge = true;
-                                    break;
+                            const neighbors = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];
+                            for (const [nx, ny] of neighbors) {
+                                const nKey = `${nx},${ny}`;
+                                if (!visitedInRegion.has(nKey)) {
+                                    stack.push([nx, ny]);
+                                    visitedInRegion.add(nKey);
                                 }
                             }
                         }
-                        if (isEdge) {
-                            outline.push([x, y]);
-                            edgeSet.add(key);
-                        }
                     }
-
-                    if (outline.length <= 1) return outline;
-                    const path = [outline[0]];
-                    const used = new Set([`${outline[0][0]},${outline[0][1]}`]);
-                    let current = outline[0];
-
-                    while (used.size < outline.length) {
-                        const next = outline.find(([x, y]) => !used.has(`${x},${y}`) && Math.hypot(x - current[0], y - current[1]) <= Math.sqrt(2));
-                        if (!next) break;
-                        path.push(next);
-                        used.add(`${next[0]},${next[1]}`);
-                        current = next;
-                    }
-                    return path.length > 2 ? path : outline;
+                    return regionCoords.length > 2 ? { coords: regionCoords, visited: visitedInRegion } : null;
                 };
 
-                const drawOutline = async (outline, region, targetColor) => {
-                    const regionSize = region.length;
-                    const penSize = regionSize > 200 ? 8 : regionSize > 50 ? 4 : 2; // Daha küçük pen size ile detay
+                for (let y = imgTop; y <= imgBottom; y++) {
+                    for (let x = imgLeft; x <= imgRight; x++) {
+                        if (!this.isDrawingActive) { this.stopDrawing(); return; }
 
-                    if (lastPenSize !== penSize) {
-                        window.game._socket.emit(10, window.game._codigo, [6, penSize]);
-                        ctx.lineWidth = penSize;
-                        lastPenSize = penSize;
-                    }
+                        const key = `${x},${y}`;
+                        if (visited.has(key)) continue;
 
-                    if (outline.length > 1) {
-                        const command = [2, ...outline.flat()];
-                        window.game._socket.emit(10, window.game._codigo, command);
-                        ctx.beginPath();
-                        ctx.moveTo(outline[0][0], outline[0][1]);
-                        for (let i = 1; i < outline.length; i++) {
-                            ctx.lineTo(outline[i][0], outline[i][1]);
-                        }
-                        ctx.stroke();
-                        await new Promise(resolve => setTimeout(resolve, drawSpeedValue));
-                    }
-                };
+                        const pixelColor = getColorAt(x, y);
 
-                const fillRegion = async (region) => {
-                    const canvasWidth = window.game._desenho._canvas.canvas.width;
-                    const visitedInFill = new Set(region.map(([x, y]) => `${x},${y}`)); // Bölgedeki pikseller
-                    const fills = [];
-                    const stack = [];
-
-                    // Bölgedeki bir başlangıç noktası seç
-                    const [startX, startY] = region[0];
-                    stack.push([startX, startY]);
-
-                    while (stack.length > 0) {
-                        let [x, y] = stack.pop();
-                        let leftX = x;
-                        let rightX = x;
-
-                        // Sol sınırı bul
-                        while (leftX - 1 >= 0 && visitedInFill.has(`${leftX - 1},${y}`)) {
-                            leftX--;
+                        if (this.colorDistance(pixelColor, backgroundColor) <= colorToleranceValue) {
+                            visited.add(key);
+                            continue;
                         }
 
-                        // Sağ sınırı bul
-                        while (rightX + 1 < canvasWidth && visitedInFill.has(`${rightX + 1},${y}`)) {
-                            rightX++;
-                        }
+                        const regionResult = traceRegion(x, y, pixelColor, colorToleranceValue);
 
-                        // Bu satırdaki dikdörtgeni ekle
-                        const width = rightX - leftX + 1;
-                        fills.push([leftX, y, width, 1]);
-
-                        // Üst ve alt satırları tara
-                        for (let scanX = leftX; scanX <= rightX; scanX++) {
-                            const above = `${scanX},${y - 1}`;
-                            const below = `${scanX},${y + 1}`;
-                            if (y - 1 >= 0 && visitedInFill.has(above) && !fills.some(f => f[1] === y - 1 && f[0] <= scanX && scanX < f[0] + f[2])) {
-                                stack.push([scanX, y - 1]);
-                            }
-                            if (y + 1 < canvasHeight && visitedInFill.has(below) && !fills.some(f => f[1] === y + 1 && f[0] <= scanX && scanX < f[0] + f[2])) {
-                                stack.push([scanX, y + 1]);
-                            }
-                        }
-
-                        // İşlenen pikselleri visited olarak işaretle
-                        for (let scanX = leftX; scanX <= rightX; scanX++) {
-                            visitedInFill.delete(`${scanX},${y}`); // Tekrar işlenmesin
+                        if (regionResult) {
+                            const { coords: regionCoords, visited: visitedInRegion } = regionResult;
+                            regions.push({
+                                color: pixelColor,
+                                hex: this.rgbToHex(pixelColor),
+                                coords: regionCoords,
+                                size: regionCoords.length
+                            });
+                            visitedInRegion.forEach(k => visited.add(k));
+                        } else {
+                            visited.add(key);
                         }
                     }
+                }
 
-                    if (fills.length > 0) {
-                        const fillCommand = [3, ...fills.flat()];
-                        window.game._socket.emit(10, window.game._codigo, fillCommand);
-                        const ctx = window.game._desenho._canvas.canvas.getContext('2d');
-                        fills.forEach(([x, y, w, h]) => ctx.fillRect(x, y, w, h));
-                        await new Promise(resolve => setTimeout(resolve, drawSpeedValue));
+                regions.sort((a, b) => b.size - a.size);
+
+                for (const region of regions) {
+                    if (!this.isDrawingActive || !window.game.turn) {
+                        this.stopDrawing();
+                        return;
                     }
-                };
 
-                const drawRegions = async () => {
-                    for (let y = imgTop; y <= imgBottom; y += finerSampleStep) {
-                        if (!this.isDrawingActive || !window.game.turn) {
-                            this.stopDrawing();
-                            return;
-                        }
-                        for (let x = imgLeft; x <= imgRight; x += finerSampleStep) {
-                            const key = `${x},${y}`;
-                            if (visited.has(key)) continue;
-
-                            const pixelColor = getColorAt(x, y);
-                            if (this.colorDistance(pixelColor, backgroundColor) <= 15) continue;
-
-                            const nearestColor = topColors.reduce((prev, curr) =>
-                                                                  this.colorDistance(pixelColor, prev.rgb) < this.colorDistance(pixelColor, curr.rgb) ? prev : curr
-                                                                 );
-
-                            const region = traceRegion(x, y, nearestColor.rgb);
-                            if (!region) continue;
-
-                            if (!this.isDrawingActive || !window.game.turn) {
-                                this.stopDrawing();
-                                return;
-                            }
-
-                            window.game._socket.emit(10, window.game._codigo, [5, nearestColor.hex]);
-                            ctx.strokeStyle = `#${nearestColor.hex.slice(1)}`;
-                            ctx.fillStyle = `#${nearestColor.hex.slice(1)}`;
-
-                            const outline = getOutline(region, nearestColor.rgb);
-                            await drawOutline(outline, region, nearestColor.rgb);
-
-                            if (region.length > 20) { // Daha küçük eşik ile dolgu
-                                await fillRegion(region);
-                            }
-                        }
+                    try {
+                        await this.fillRegion(region.coords, region.hex);
+                        await this.delay(drawSpeedValue);
+                    } catch (e) {
+                        this.showNotification("Error during region fill.", 2000);
                     }
-                };
-
-                await drawRegions();
+                }
 
                 if (this.isDrawingActive) {
                     this.showNotification(this.localize("Drawing completed! ✧"), 3000);
                 }
                 this.stopDrawing();
             };
+
             img.onerror = () => {
                 this.showNotification(this.localize("Failed to load image! ✧"), 3000);
                 this.stopDrawing();
             };
+
             img.src = imageSrc;
         }
 
+        async fillRegion(region, colorHex) {
+            if (!this.isDrawingActive || !window.game || !window.game._socket || !window.game.turn) {
+                this.stopDrawing();
+                return;
+            }
+
+            const canvas = window.game._desenho._canvas.canvas;
+            const ctx = canvas.getContext('2d');
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+
+            const regionSet = new Set(region.map(([x, y]) => `${x},${y}`));
+            const visited = new Set();
+            const fills = [];
+            const queue = [region[0]];
+
+            const isInRegion = (x, y) => regionSet.has(`${x},${y}`) && !visited.has(`${x},${y}`);
+
+            while (queue.length > 0) {
+                const [x, y] = queue.shift();
+                if (!isInRegion(x, y)) continue;
+
+                let leftX = x;
+                let rightX = x;
+
+                while (leftX - 1 >= 0 && isInRegion(leftX - 1, y)) leftX--;
+                while (rightX + 1 < canvasWidth && isInRegion(rightX + 1, y)) rightX++;
+
+                const width = rightX - leftX + 1;
+                fills.push([leftX, y, width, 1]);
+
+                for (let i = leftX; i <= rightX; i++) visited.add(`${i},${y}`);
+
+                if (y - 1 >= 0) {
+                    for (let i = leftX; i <= rightX; i++) {
+                        if (isInRegion(i, y - 1)) queue.push([i, y - 1]);
+                    }
+                }
+                if (y + 1 < canvasHeight) {
+                    for (let i = leftX; i <= rightX; i++) {
+                        if (isInRegion(i, y + 1)) queue.push([i, y + 1]);
+                    }
+                }
+            }
+
+            if (fills.length > 0) {
+                ctx.fillStyle = `#${colorHex.slice(1)}`;
+                window.game._socket.emit(10, window.game._codigo, [5, colorHex]);
+
+                const fillCommand = [3, ...fills.flat()];
+                window.game._socket.emit(10, window.game._codigo, fillCommand);
+
+                fills.forEach(([x, y, w, h]) => ctx.fillRect(x, y, w, h));
+            }
+        }
         stopDrawing() {
             this.isDrawingActive = false;
-            this.elements.sendDraw.disabled = false;
+            this.elements.sendDraw.disabled = !(this.elements.previewImg.src && this.elements.previewImg.src !== '#');
+            this.elements.sendDraw.textContent = this.localize("Draw Now ✧");
         }
 
-        colorDistance(color1, color2) {
-            if (!color1 || !color2) return Infinity;
-            const rDiff = color1[0] - color2[0];
-            const gDiff = color1[1] - color2[1];
-            const bDiff = color1[2] - color2[2];
+        colorDistance(color1_rgb, color2_rgb) {
+            if (!color1_rgb || !color2_rgb || color1_rgb.length < 3 || color2_rgb.length < 3) return Infinity;
+            const rDiff = color1_rgb[0] - color2_rgb[0];
+            const gDiff = color1_rgb[1] - color2_rgb[1];
+            const bDiff = color1_rgb[2] - color2_rgb[2];
             return Math.sqrt(rDiff * rDiff + gDiff * gDiff + bDiff * bDiff);
+        }
+
+        rgbToHex(rgb) {
+            if (!rgb || rgb.length < 3) return '#000000';
+            const r = Math.min(255, Math.max(0, Math.round(rgb[0])));
+            const g = Math.min(255, Math.max(0, Math.round(rgb[1])));
+            const b = Math.min(255, Math.max(0, Math.round(rgb[2])));
+            return 'x' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+        }
+
+        delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
     }
 
