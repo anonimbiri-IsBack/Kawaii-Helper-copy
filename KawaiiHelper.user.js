@@ -18,7 +18,6 @@
 
     class KawaiiHelper {
         constructor() {
-            this.SCRIPT_VERSION = "2025-03-30";
 
             this.translations = {
                 en: {
@@ -132,7 +131,7 @@
                 req.send();
                 if (req.status === 200) {
                     const latest = JSON.parse(req.responseText).tag_name.replace(/^v/, '');
-                    if (latest > this.SCRIPT_VERSION) {
+                    if (latest > GM_info.script.version) {
                         this.showNotification(
                             this.localize("New update available!"),
                             1e4,
