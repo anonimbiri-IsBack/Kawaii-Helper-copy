@@ -18,7 +18,6 @@
 
     class KawaiiHelper {
         constructor() {
-
             this.translations = {
                 en: {
                     "✧ Kawaii Helper ✧": "✧ Kawaii Helper ✧",
@@ -1557,7 +1556,7 @@
                 try {
                     gameCanvas = window.game._desenho._canvas.canvas;
                     if (!gameCanvas || !(gameCanvas instanceof HTMLCanvasElement)) throw new Error("Canvas not accessible!");
-                    ctx = gameCanvas.getContext('2d');
+                    ctx = gameCanvas.getContext('2d', { willReadFrequently: true });
                     if (!ctx) throw new Error("Canvas context not available!");
                     canvasWidth = Math.floor(gameCanvas.width);
                     canvasHeight = Math.floor(gameCanvas.height);
@@ -1568,117 +1567,29 @@
                     return;
                 }
 
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = canvasWidth;
-                tempCanvas.height = canvasHeight;
-                const tempCtx = tempCanvas.getContext('2d');
+                const { tempCtx, imgLeft, imgRight, imgTop, imgBottom } = this.prepareImageCanvas(img, canvasWidth, canvasHeight);
                 if (!tempCtx) {
                     this.showNotification(this.localize("Temp canvas context failed! ✧"), 3000);
                     this.stopDrawing();
                     return;
                 }
 
-                const scale = Math.min(canvasWidth / img.width, canvasHeight / img.height);
-                const newWidth = Math.floor(img.width * scale);
-                const newHeight = Math.floor(img.height * scale);
-                const offsetX = Math.floor((canvasWidth - newWidth) / 2);
-                const offsetY = Math.floor((canvasHeight - newHeight) / 2);
-
-                let imageData, data;
-                try {
-                    tempCtx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
-                    imageData = tempCtx.getImageData(0, 0, canvasWidth, canvasHeight);
-                    data = imageData.data;
-                } catch (e) {
-                    this.showNotification(this.localize("Image data error: ${e.message} ✧", { "e.message": e.message }), 3000);
+                const { imageData, data } = this.getImageData(tempCtx, canvasWidth, canvasHeight);
+                if (!imageData) {
                     this.stopDrawing();
                     return;
                 }
 
-                const drawSpeedValue = parseInt(this.elements.drawSpeed.value) || 200; // 920ms olarak ayarlıysa bu kullanılacak
+                const drawSpeedValue = parseInt(this.elements.drawSpeed.value) || 200;
                 const colorToleranceValue = parseInt(this.elements.colorTolerance.value) || 20;
 
-                const imgLeft = offsetX;
-                const imgRight = offsetX + newWidth - 1;
-                const imgTop = offsetY;
-                const imgBottom = offsetY + newHeight - 1;
+                const regions = await this.detectRegions(data, canvasWidth, canvasHeight, imgLeft, imgRight, imgTop, imgBottom, colorToleranceValue);
+                if (!this.isDrawingActive) return;
 
-                const backgroundColor = [255, 255, 255]; // Arka plan beyaz varsayımı
-
-                const visited = new Set();
-                const regions = [];
-
-                const getColorAt = (x, y) => {
-                    if (x < 0 || x >= canvasWidth || y < 0 || y >= canvasHeight) return backgroundColor;
-                    const index = (y * canvasWidth + x) * 4;
-                    return [data[index], data[index + 1], data[index + 2]];
-                };
-
-                const traceRegion = (startX, startY, startColor, tolerance) => {
-                    const regionCoords = [];
-                    const stack = [[startX, startY]];
-                    const visitedInRegion = new Set([`${startX},${startY}`]);
-
-                    while (stack.length > 0) {
-                        const [x, y] = stack.pop();
-                        const key = `${x},${y}`;
-
-                        if (visited.has(key) || x < imgLeft || x > imgRight || y < imgTop || y > imgBottom) {
-                            continue;
-                        }
-
-                        const pixelColor = getColorAt(x, y);
-
-                        if (this.colorDistance(pixelColor, startColor) <= tolerance) {
-                            regionCoords.push([x, y]);
-                            const neighbors = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];
-                            for (const [nx, ny] of neighbors) {
-                                const nKey = `${nx},${ny}`;
-                                if (!visitedInRegion.has(nKey)) {
-                                    stack.push([nx, ny]);
-                                    visitedInRegion.add(nKey);
-                                }
-                            }
-                        }
-                    }
-                    return regionCoords.length > 2 ? { coords: regionCoords, visited: visitedInRegion } : null;
-                };
-
-                for (let y = imgTop; y <= imgBottom; y++) {
-                    for (let x = imgLeft; x <= imgRight; x++) {
-                        if (!this.isDrawingActive) { this.stopDrawing(); return; }
-
-                        const key = `${x},${y}`;
-                        if (visited.has(key)) continue;
-
-                        const pixelColor = getColorAt(x, y);
-
-                        if (this.colorDistance(pixelColor, backgroundColor) <= colorToleranceValue) {
-                            visited.add(key);
-                            continue;
-                        }
-
-                        const regionResult = traceRegion(x, y, pixelColor, colorToleranceValue);
-
-                        if (regionResult) {
-                            const { coords: regionCoords, visited: visitedInRegion } = regionResult;
-                            regions.push({
-                                color: pixelColor,
-                                hex: this.rgbToHex(pixelColor),
-                                coords: regionCoords,
-                                size: regionCoords.length
-                            });
-                            visitedInRegion.forEach(k => visited.add(k));
-                        } else {
-                            visited.add(key);
-                        }
-                    }
-                }
-
-                regions.sort((a, b) => b.size - a.size);
-
+                this.showNotification(`Processing ${regions.length} color regions...`, 2000);
                 for (const region of regions) {
                     if (!this.isDrawingActive || !window.game.turn) {
+                        this.showNotification(this.localize("Drawing stopped! ✧"), 2000);
                         this.stopDrawing();
                         return;
                     }
@@ -1687,6 +1598,7 @@
                         await this.fillRegion(region.coords, region.hex);
                         await this.delay(drawSpeedValue);
                     } catch (e) {
+                        console.error("Kawaii Helper: Error during region fill:", e);
                         this.showNotification("Error during region fill.", 2000);
                     }
                 }
@@ -1703,6 +1615,123 @@
             };
 
             img.src = imageSrc;
+        }
+
+        prepareImageCanvas(img, canvasWidth, canvasHeight) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvasWidth;
+            tempCanvas.height = canvasHeight;
+            const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
+
+            const scale = Math.min(canvasWidth / img.width, canvasHeight / img.height);
+            const newWidth = Math.floor(img.width * scale);
+            const newHeight = Math.floor(img.height * scale);
+            const offsetX = Math.floor((canvasWidth - newWidth) / 2);
+            const offsetY = Math.floor((canvasHeight - newHeight) / 2);
+
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+            tempCtx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
+
+            return {
+                tempCtx,
+                imgLeft: offsetX,
+                imgRight: offsetX + newWidth,
+                imgTop: offsetY,
+                imgBottom: offsetY + newHeight
+            };
+        }
+
+        getImageData(tempCtx, canvasWidth, canvasHeight) {
+            let imageData, data;
+            try {
+                imageData = tempCtx.getImageData(0, 0, canvasWidth, canvasHeight);
+                data = imageData.data;
+            } catch (e) {
+                this.showNotification(this.localize("Image data error: ${e.message} ✧", { "e.message": e.message }), 3000);
+                return { imageData: null, data: null };
+            }
+            return { imageData, data };
+        }
+
+        async detectRegions(data, canvasWidth, canvasHeight, imgLeft, imgRight, imgTop, imgBottom, colorToleranceValue) {
+            const backgroundColor = [255, 255, 255, 255];
+            const visited = new Uint8Array(canvasWidth * canvasHeight);
+            const regions = [];
+
+            const getColorAt = (x, y) => {
+                if (x < 0 || x >= canvasWidth || y < 0 || y >= canvasHeight) {
+                    return backgroundColor;
+                }
+                const index = (y * canvasWidth + x) * 4;
+                return [data[index], data[index + 1], data[index + 2], data[index + 3]];
+            };
+
+            const traceRegion = (startX, startY, startColor, tolerance) => {
+                const regionCoords = [];
+                const stack = [[startX, startY]];
+                const currentRegionVisited = new Set([`${startX},${startY}`]);
+                let minX = startX, minY = startY, maxX = startX, maxY = startY;
+
+                visited[startY * canvasWidth + startX] = 1;
+
+                while (stack.length > 0) {
+                    const [x, y] = stack.pop();
+                    regionCoords.push([x, y]);
+                    minX = Math.min(minX, x); minY = Math.min(minY, y);
+                    maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+
+                    const neighbors = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];
+                    for (const [nx, ny] of neighbors) {
+                        const nKey = `${nx},${ny}`;
+                        if (nx >= imgLeft && nx < imgRight && ny >= imgTop && ny < imgBottom &&
+                            visited[ny * canvasWidth + nx] === 0 &&
+                            !currentRegionVisited.has(nKey)
+                           ) {
+                            const neighborColor = getColorAt(nx, ny);
+                            if (this.colorDistance(neighborColor, startColor) <= tolerance) {
+                                visited[ny * canvasWidth + nx] = 1;
+                                currentRegionVisited.add(nKey);
+                                stack.push([nx, ny]);
+                            }
+                        }
+                    }
+                }
+
+                return regionCoords.length > 2 ? {
+                    coords: regionCoords,
+                    color: startColor.slice(0, 3),
+                    bounds: { minX, minY, maxX, maxY }
+                } : null;
+            };
+
+            for (let y = imgTop; y < imgBottom; y++) {
+                for (let x = imgLeft; x < imgRight; x++) {
+                    if (!this.isDrawingActive) { this.stopDrawing(); return []; }
+                    const index = y * canvasWidth + x;
+                    if (visited[index] === 1) continue;
+
+                    const pixelColor = getColorAt(x, y);
+                    const regionResult = traceRegion(x, y, pixelColor, colorToleranceValue);
+
+                    if (regionResult) {
+                        if (this.colorDistance(regionResult.color, backgroundColor) > colorToleranceValue) {
+                            regions.push({
+                                color: regionResult.color,
+                                hex: this.rgbToHex(regionResult.color),
+                                coords: regionResult.coords,
+                                size: regionResult.coords.length,
+                                bounds: regionResult.bounds
+                            });
+                        }
+                    } else {
+                        visited[index] = 1;
+                    }
+                }
+            }
+
+            regions.sort((a, b) => b.size - a.size);
+            return regions;
         }
 
         async fillRegion(region, colorHex) {
@@ -1760,6 +1789,7 @@
                 fills.forEach(([x, y, w, h]) => ctx.fillRect(x, y, w, h));
             }
         }
+
         stopDrawing() {
             this.isDrawingActive = false;
             this.elements.sendDraw.disabled = !(this.elements.previewImg.src && this.elements.previewImg.src !== '#');
