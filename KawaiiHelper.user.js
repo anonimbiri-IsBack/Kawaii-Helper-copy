@@ -1647,83 +1647,98 @@
         }
 
         async detectRegions(data, canvasWidth, canvasHeight, imgLeft, imgRight, imgTop, imgBottom, colorToleranceValue) {
-            const backgroundColor = [255, 255, 255, 255];
-            const visited = new Uint8Array(canvasWidth * canvasHeight);
-            const regions = [];
+    const backgroundColor = [255, 255, 255, 255];
+    const visited = new Uint8Array(canvasWidth * canvasHeight);
+    const regions = [];
 
-            const getColorAt = (x, y) => {
-                if (x < 0 || x >= canvasWidth || y < 0 || y >= canvasHeight) {
-                    return backgroundColor;
-                }
-                const index = (y * canvasWidth + x) * 4;
-                return [data[index], data[index + 1], data[index + 2], data[index + 3]];
-            };
+    const getColorAt = (x, y) => {
+        if (x < 0 || x >= canvasWidth || y < 0 || y >= canvasHeight) {
+            return backgroundColor;
+        }
+        const index = (y * canvasWidth + x) * 4;
+        return [data[index], data[index + 1], data[index + 2], data[index + 3]];
+    };
 
-            const traceRegion = (startX, startY, startColor, tolerance) => {
-                const regionCoords = [];
-                const stack = [[startX, startY]];
-                const currentRegionVisited = new Set([`${startX},${startY}`]);
-                let minX = startX, minY = startY, maxX = startX, maxY = startY;
+    const traceRegion = (startX, startY, startColor, tolerance) => {
+        const regionCoords = [];
+        const stack = [[startX, startY]];
+        const currentRegionVisited = new Set([`${startX},${startY}`]);
+        let minX = startX, minY = startY, maxX = startX, maxY = startY;
 
-                visited[startY * canvasWidth + startX] = 1;
+        visited[startY * canvasWidth + startX] = 1;
 
-                while (stack.length > 0) {
-                    const [x, y] = stack.pop();
-                    regionCoords.push([x, y]);
-                    minX = Math.min(minX, x); minY = Math.min(minY, y);
-                    maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+        const neighbors = [
+            [1, 0], [-1, 0], [0, 1], [0, -1] // 4-direction check
+        ];
 
-                    const neighbors = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];
-                    for (const [nx, ny] of neighbors) {
-                        const nKey = `${nx},${ny}`;
-                        if (nx >= imgLeft && nx < imgRight && ny >= imgTop && ny < imgBottom &&
-                            visited[ny * canvasWidth + nx] === 0 &&
-                            !currentRegionVisited.has(nKey)
-                           ) {
-                            const neighborColor = getColorAt(nx, ny);
-                            if (this.colorDistance(neighborColor, startColor) <= tolerance) {
-                                visited[ny * canvasWidth + nx] = 1;
-                                currentRegionVisited.add(nKey);
-                                stack.push([nx, ny]);
-                            }
-                        }
-                    }
-                }
+        while (stack.length > 0) {
+            const [x, y] = stack.pop();
+            regionCoords.push([x, y]);
+            minX = Math.min(minX, x); minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
 
-                return regionCoords.length > 2 ? {
-                    coords: regionCoords,
-                    color: startColor.slice(0, 3),
-                    bounds: { minX, minY, maxX, maxY }
-                } : null;
-            };
+            for (const [dx, dy] of neighbors) {
+                const nx = x + dx;
+                const ny = y + dy;
+                const nKey = `${nx},${ny}`;
+                if (nx >= imgLeft && nx <= imgRight && ny >= imgTop && ny <= imgBottom &&
+                    visited[ny * canvasWidth + nx] === 0 &&
+                    !currentRegionVisited.has(nKey)
+                ) {
+                    const neighborColor = getColorAt(nx, ny);
+                    const distance = this.colorDistance(neighborColor, startColor);
 
-            for (let y = imgTop; y < imgBottom && this.isDrawing; y++) {
-                for (let x = imgLeft; x < imgRight && this.isDrawing; x++) {
-                    if (!window.game.turn) { this.stopDrawing(); return []; }
-                    const index = y * canvasWidth + x;
-                    if (visited[index] === 1) continue;
-
-                    const pixelColor = getColorAt(x, y);
-                    const regionResult = traceRegion(x, y, pixelColor, colorToleranceValue);
-
-                    if (regionResult) {
-                        if (this.colorDistance(regionResult.color, backgroundColor) > colorToleranceValue) {
-                            regions.push({
-                                color: regionResult.color,
-                                hex: this.rgbToHex(regionResult.color),
-                                coords: regionResult.coords,
-                                size: regionResult.coords.length,
-                                bounds: regionResult.bounds
-                            });
-                        }
-                    } else {
-                        visited[index] = 1;
+                    if (distance <= tolerance * 1.2) { // Dynamic tolerance
+                        visited[ny * canvasWidth + nx] = 1;
+                        currentRegionVisited.add(nKey);
+                        stack.push([nx, ny]);
                     }
                 }
             }
+        }
 
-            regions.sort((a, b) => b.size - a.size);
-            return regions;
+        return regionCoords.length > 0 ? { // Allow smaller regions
+            coords: regionCoords,
+            color: startColor.slice(0, 3),
+            bounds: { minX, minY, maxX, maxY }
+        } : null;
+    };
+
+    for (let y = imgTop; y <= imgBottom && this.isDrawing; y += 1) {
+        for (let x = imgLeft; x <= imgRight && this.isDrawing; x += 1) {
+            if (!window.game.turn) { this.stopDrawing(); return []; }
+            const index = y * canvasWidth + x;
+            if (visited[index] === 1) continue;
+
+            const pixelColor = getColorAt(x, y);
+            const regionResult = traceRegion(x, y, pixelColor, colorToleranceValue);
+
+            if (regionResult) {
+                if (this.colorDistance(regionResult.color, backgroundColor) > colorToleranceValue) {
+                    regions.push({
+                        color: regionResult.color,
+                        hex: this.rgbToHex(regionResult.color),
+                        coords: regionResult.coords,
+                        size: regionResult.coords.length,
+                        bounds: regionResult.bounds
+                    });
+                }
+            } else {
+                visited[index] = 1;
+            }
+        }
+    }
+
+    regions.sort((a, b) => b.size - a.size);
+    return regions;
+}
+
+        areRegionsClose(boundsA, boundsB, threshold) {
+            const horizontalClose = Math.abs(boundsA.maxX - boundsB.minX) <= threshold ||
+                  Math.abs(boundsB.maxX - boundsA.minX) <= threshold;
+            const verticalClose = Math.abs(boundsA.maxY - boundsB.minY) <= threshold ||
+                  Math.abs(boundsB.maxY - boundsA.minY) <= threshold;
+            return horizontalClose && verticalClose;
         }
 
         async fillRegion(region, colorHex) {
