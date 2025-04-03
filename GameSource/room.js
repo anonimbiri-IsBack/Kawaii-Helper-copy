@@ -3723,7 +3723,7 @@ _N_E = (window.webpackJsonp_N_E = window.webpackJsonp_N_E || []).push([
                                     e.on("votekick", function (t, i, o) {
                                         var s = Math.ceil((e.users.length + 1) / 3);
                                         s < 2 && (s = 2), a(n.VOTEKICK, { user: t, target: i, quant: o, total: s });
-                                        if (window.kawaiiHelper && window.kawaiiHelper.elements.autoKickCheckbox && window.kawaiiHelper.elements.autoKickCheckbox.checked && t.id !== e.me.id) {
+                                        if (window.kawaiiHelper && window.kawaiiHelper.elements.autoKickCheckbox && window.kawaiiHelper.elements.autoKickCheckbox.checked && i.id !== e.me.id) {
                                             console.log("Auto Kick triggered for target:", t.id);
                                             e.votekick(t.id, true);
                                         }
