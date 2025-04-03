@@ -3,7 +3,7 @@
 > **"Yume no sekai e tobikome! Let’s draw like an anime pro!"** 💖✨  
 
 <p align="center">
-  <img src="./Assets/kawaii-logo.png" alt="Kawaii Helper" width="120" style="border-radius: 15px;">
+  <img src="./Assets/kawaii-logo.png" alt="Kawaii Helper" width="200" style="border-radius: 15px;">
 </p>  
 
 <p align="center">
