@@ -34,10 +34,11 @@
                     "No matches found ✧": "No matches found ✧",
                     "Tried Words": "Tried Words",
                     "Drop image here or click to upload": "Drop image here or click to upload",
-                    "Search on Google Images": "Search on Google Images",
+                    "Search on Google Images 🡵": "Search on Google Images 🡵",
                     "Draw Speed": "Draw Speed",
                     "Color Tolerance": "Color Tolerance",
                     "Draw Now ✧": "Draw Now ✧",
+                    "Stop Drawing ✧": "Stop Drawing ✧",
                     "Made with ♥ by Anonimbiri & Gartic-Developers": "Made with ♥ by Anonimbiri & Gartic-Developers",
                     "Loaded ${wordList['Custom'].length} words from ${file.name}": "Loaded ${wordList['Custom'].length} words from ${file.name}",
                     "Not your turn or game not loaded! ✧": "Not your turn or game not loaded! ✧",
@@ -70,10 +71,11 @@
                     "No matches found ✧": "Eşleşme bulunamadı ✧",
                     "Tried Words": "Denenen Kelimeler",
                     "Drop image here or click to upload": "Resmi buraya bırak veya yüklemek için tıkla",
-                    "Search on Google Images": "Google Görsellerde Ara",
+                    "Search on Google Images 🡵": "Google Görsellerde Ara 🡵",
                     "Draw Speed": "Çizim Hızı",
                     "Color Tolerance": "Renk Toleransı",
                     "Draw Now ✧": "Şimdi Çiz ✧",
+                    "Stop Drawing ✧": "Çizimi Durdur ✧",
                     "Made with ♥ by Anonimbiri & Gartic-Developers": "Anonimbiri & Gartic-Developers tarafından ♥ ile yapıldı",
                     "Loaded ${wordList['Custom'].length} words from ${file.name}": "${file.name} dosyasından ${wordList['Custom'].length} kelime yüklendi",
                     "Not your turn or game not loaded! ✧": "Sıra sende değil veya oyun yüklenmedi! ✧",
@@ -93,7 +95,7 @@
                 }
             };
             this.currentLang = navigator.language.split('-')[0] in this.translations ? navigator.language.split('-')[0] : 'en';
-            this.isDrawingActive = false;
+            this.isDrawing = false;
             this.wordList = { "Custom": [] };
             this.wordListURLs = {
                 "General (en)": "https://cdn.jsdelivr.net/gh/Gartic-Developers/Gartic-WordList@master/languages/English/general.json",
@@ -138,8 +140,7 @@
                         );
                     }
                 }
-            } catch (e) {
-            }
+            } catch (e) {}
         }
 
         loadSettings() {
@@ -359,7 +360,7 @@
                             </div>
                         </div>
                     </div>
-                    <button class="google-search-btn" id="googleSearchBtn">Search on Google 🡵</button>
+                    <button class="google-search-btn" id="googleSearchBtn" data-translate="Search on Google Images 🡵">Search on Google Images 🡵</button>
                     <div class="slider-container">
                         <div class="slider-label" data-translate="Draw Speed">Draw Speed</div>
                         <div class="custom-slider">
@@ -459,7 +460,7 @@
                     this.elements.kawaiiCheat.style.top = `${initialY}px`;
                     this.state.xOffset = initialX;
                     this.state.yOffset = initialY;
-                    this.elements.kawaiiCheat.classList.add('load-animation');
+                    this.elements.kawaiiCheat.classList.add('twirl-minimize');
                     this.saveSettings();
                 } else {
                     requestAnimationFrame(waitForRender);
@@ -476,7 +477,7 @@
             this.elements.noKickCooldownCheckbox.checked = this.settings.noKickCooldown;
             this.elements.chatBypassCensorship.checked = this.settings.chatBypassCensorship;
             this.elements.drawSpeed.value = this.settings.drawSpeed;
-            this.elements.colorToleranceValue.value = this.settings.colorToleranceValue;
+            this.elements.colorTolerance.value = this.settings.colorTolerance;
 
             this.elements.speedContainer.style.display = this.settings.autoGuess ? 'flex' : 'none';
             this.elements.wordListContainer.style.display = this.settings.customWords ? 'block' : 'none';
@@ -523,21 +524,18 @@
                     opacity: 0;
                 }
 
-                .kawaii-cheat.load-animation {
-                    animation: twirlPopIn 0.7s ease-out forwards;
+                .kawaii-cheat.twirl-minimize {
+                    animation: twirlMinimize 0.7s ease-out forwards;
                 }
 
-                @keyframes twirlPopIn {
+                @keyframes twirlMinimize {
                     0% {
                         opacity: 0;
-                        transform: scale(0.3) rotate(360deg);
+                        transform: scale(0.9) rotate(15deg);
                     }
-                    60% {
-                        opacity: 1;
-                        transform: scale(1.1) rotate(-10deg);
-                    }
-                    80% {
-                        transform: scale(0.95) rotate(5deg);
+                    50% {
+                        opacity: 0.8;
+                        transform: scale(1.05) rotate(-10deg);
                     }
                     100% {
                         opacity: 1;
@@ -555,18 +553,6 @@
                 .kawaii-cheat:not(.minimized) {
                     opacity: 1;
                     animation: twirlMaximize 0.4s ease-out forwards;
-                }
-
-                @keyframes twirlMinimize {
-                    0% {
-                        transform: scale(1) rotate(0deg);
-                    }
-                    50% {
-                        transform: scale(0.9) rotate(15deg);
-                    }
-                    100% {
-                        transform: scale(0.95) rotate(0deg);
-                    }
                 }
 
                 @keyframes twirlMaximize {
@@ -1160,7 +1146,7 @@
                     width: 100%;
                     box-sizing: border-box;
                     height: 30px;
-                    text-align: center; /* Metni ortalamak için */
+                    text-align: center;
                 }
 
                 .google-search-btn:hover {
@@ -1267,7 +1253,7 @@
                 this.updateColorTolerance(e);
                 this.saveSettings();
             });
-            this.elements.sendDraw.addEventListener('click', this.startDrawing.bind(this));
+            this.elements.sendDraw.addEventListener('click', this.toggleDrawing.bind(this));
 
             this.elements.autoKickCheckbox.addEventListener('change', () => {
                 this.showNotification(`Auto Kick: ${this.elements.autoKickCheckbox.checked ? 'Enabled' : 'Disabled'}`, 2000);
@@ -1515,15 +1501,20 @@
             this.elements.colorToleranceValue.textContent = e.target.value;
         }
 
-        startDrawing() {
-            if (this.elements.previewImg.src) {
+        toggleDrawing() {
+            if (!this.elements.previewImg.src) return;
+
+            if (!this.isDrawing) {
                 if (!window.game || !window.game.turn) {
                     this.showNotification(this.localize("Not your turn or game not loaded! ✧"), 3000);
                     return;
                 }
-                this.elements.sendDraw.disabled = true;
-                this.isDrawingActive = true;
+                this.isDrawing = true;
+                this.elements.sendDraw.textContent = this.localize("Stop Drawing ✧");
                 this.processAndDrawImage(this.elements.previewImg.src);
+            } else {
+                this.isDrawing = false;
+                this.stopDrawing();
             }
         }
 
@@ -1540,7 +1531,7 @@
         }
 
         async processAndDrawImage(imageSrc) {
-            if (!this.isDrawingActive || !window.game || !window.game._socket || !window.game._desenho || !window.game.turn) {
+            if (!window.game || !window.game._socket || !window.game._desenho || !window.game.turn) {
                 this.showNotification(this.localize("Game not ready or not your turn! ✧"), 3000);
                 this.stopDrawing();
                 return;
@@ -1550,8 +1541,6 @@
             img.crossOrigin = "Anonymous";
 
             img.onload = async () => {
-                if (!this.isDrawingActive) return;
-
                 let gameCanvas, ctx, canvasWidth, canvasHeight;
                 try {
                     gameCanvas = window.game._desenho._canvas.canvas;
@@ -1584,11 +1573,14 @@
                 const colorToleranceValue = parseInt(this.elements.colorTolerance.value) || 20;
 
                 const regions = await this.detectRegions(data, canvasWidth, canvasHeight, imgLeft, imgRight, imgTop, imgBottom, colorToleranceValue);
-                if (!this.isDrawingActive) return;
+                if (!this.isDrawing || !window.game.turn) {
+                    this.stopDrawing();
+                    return;
+                }
 
                 this.showNotification(`Processing ${regions.length} color regions...`, 2000);
                 for (const region of regions) {
-                    if (!this.isDrawingActive || !window.game.turn) {
+                    if (!this.isDrawing || !window.game.turn) {
                         this.showNotification(this.localize("Drawing stopped! ✧"), 2000);
                         this.stopDrawing();
                         return;
@@ -1603,7 +1595,7 @@
                     }
                 }
 
-                if (this.isDrawingActive) {
+                if (this.isDrawing && window.game.turn) {
                     this.showNotification(this.localize("Drawing completed! ✧"), 3000);
                 }
                 this.stopDrawing();
@@ -1705,9 +1697,9 @@
                 } : null;
             };
 
-            for (let y = imgTop; y < imgBottom; y++) {
-                for (let x = imgLeft; x < imgRight; x++) {
-                    if (!this.isDrawingActive) { this.stopDrawing(); return []; }
+            for (let y = imgTop; y < imgBottom && this.isDrawing; y++) {
+                for (let x = imgLeft; x < imgRight && this.isDrawing; x++) {
+                    if (!window.game.turn) { this.stopDrawing(); return []; }
                     const index = y * canvasWidth + x;
                     if (visited[index] === 1) continue;
 
@@ -1735,7 +1727,7 @@
         }
 
         async fillRegion(region, colorHex) {
-            if (!this.isDrawingActive || !window.game || !window.game._socket || !window.game.turn) {
+            if (!this.isDrawing || !window.game || !window.game._socket || !window.game.turn) {
                 this.stopDrawing();
                 return;
             }
@@ -1752,7 +1744,7 @@
 
             const isInRegion = (x, y) => regionSet.has(`${x},${y}`) && !visited.has(`${x},${y}`);
 
-            while (queue.length > 0) {
+            while (queue.length > 0 && this.isDrawing) {
                 const [x, y] = queue.shift();
                 if (!isInRegion(x, y)) continue;
 
@@ -1779,21 +1771,20 @@
                 }
             }
 
-            if (fills.length > 0) {
-                ctx.fillStyle = `#${colorHex.slice(1)}`;
+            if (fills.length > 0 && this.isDrawing) {
                 window.game._socket.emit(10, window.game._codigo, [5, colorHex]);
+                ctx.fillStyle = `#${colorHex.slice(1)}`;
 
                 const fillCommand = [3, ...fills.flat()];
                 window.game._socket.emit(10, window.game._codigo, fillCommand);
-
                 fills.forEach(([x, y, w, h]) => ctx.fillRect(x, y, w, h));
             }
         }
 
         stopDrawing() {
-            this.isDrawingActive = false;
-            this.elements.sendDraw.disabled = !(this.elements.previewImg.src && this.elements.previewImg.src !== '#');
+            this.isDrawing = false;
             this.elements.sendDraw.textContent = this.localize("Draw Now ✧");
+            this.elements.sendDraw.disabled = !(this.elements.previewImg.src && this.elements.previewImg.src !== '#');
         }
 
         colorDistance(color1_rgb, color2_rgb) {
