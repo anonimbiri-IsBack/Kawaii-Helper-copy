@@ -7,7 +7,7 @@
 // @description:tr  Gartic.io için otomatik tahmin, çizim yardımı ve çizim botu ile yardımcı
 // @author       anonimbiri & Gartic-Developers
 // @license      MIT
-// @match        https://gartic.io/*
+// @match        *://*.gartic.io/*
 // @icon         https://raw.githubusercontent.com/Gartic-Developers/Kawaii-Helper/refs/heads/main/Assets/kawaii-logo.png
 // @supportURL   https://github.com/Gartic-Developers/Kawaii-Helper/issues/new?labels=bug&type=bug&template=bug_report.md&title=Bug+Report
 // @homepage     https://github.com/Gartic-Developers/Kawaii-Helper
