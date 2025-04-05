@@ -9,8 +9,10 @@
 // @license      MIT
 // @match        https://gartic.io/*
 // @icon         https://raw.githubusercontent.com/Gartic-Developers/Kawaii-Helper/refs/heads/main/Assets/kawaii-logo.png
+// @supportURL   https://github.com/Gartic-Developers/Kawaii-Helper/issues/new
 // @run-at       document-start
 // @grant        none
+// @noframes
 // ==/UserScript==
 
 (function() {
