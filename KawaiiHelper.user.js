@@ -9,6 +9,7 @@
 // @license      MIT
 // @match        *://*.gartic.io/*
 // @exclude      *://gartic.io/_next/*
+// @exclude      *://gartic.io/static/*
 // @icon         https://raw.githubusercontent.com/Gartic-Developers/Kawaii-Helper/refs/heads/main/Assets/kawaii-logo.png
 // @supportURL   https://github.com/Gartic-Developers/Kawaii-Helper/issues/new?labels=bug&type=bug&template=bug_report.md&title=Bug+Report
 // @homepage     https://github.com/Gartic-Developers/Kawaii-Helper
