@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kawaii Helper & Drawing Bot for Gartic.io
 // @name:tr      Gartic.io için Kawaii Yardımcı & Çizim Botu
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/Gartic-Developers/Kawaii-Helper
 // @version      2025-03-30
 // @description  Helper for Gartic.io with auto-guess, drawing assistance, and drawing bot
 // @description:tr  Gartic.io için otomatik tahmin, çizim yardımı ve çizim botu ile yardımcı
@@ -9,7 +9,8 @@
 // @license      MIT
 // @match        https://gartic.io/*
 // @icon         https://raw.githubusercontent.com/Gartic-Developers/Kawaii-Helper/refs/heads/main/Assets/kawaii-logo.png
-// @supportURL   https://github.com/Gartic-Developers/Kawaii-Helper/issues/new?labels=bug&template=bug_report.md&title=Bug+Report
+// @supportURL   https://github.com/Gartic-Developers/Kawaii-Helper/issues/new?labels=bug&type=bug&template=bug_report.md&title=Bug+Report
+// @homepage     https://github.com/Gartic-Developers/Kawaii-Helper
 // @run-at       document-start
 // @grant        none
 // @noframes
