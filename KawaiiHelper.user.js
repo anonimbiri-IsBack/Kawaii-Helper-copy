@@ -1626,6 +1626,7 @@
             const offsetX = Math.floor((canvasWidth - newWidth) / 2);
             const offsetY = Math.floor((canvasHeight - newHeight) / 2);
 
+            tempCtx.imageSmoothingEnabled = false;
             tempCtx.fillStyle = 'white';
             tempCtx.fillRect(0, 0, canvasWidth, canvasHeight);
             tempCtx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
