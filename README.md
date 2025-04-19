@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./Assets/kawaii-banner.png" alt="Kawaii Helper" style="width: 100%; max-width: 100%; height: 400px; object-fit: cover; object-position: top; border-radius: 8px;">
+  <img src="./Assets/kawaii-banner-crop.png" alt="Kawaii Helper" style="width: 100%; max-width: 100%; height: 400px; object-fit: cover; object-position: top; border-radius: 8px;">
 </p>
 
 <h1 align="center">🌸 Kawaii Helper & Drawing Bot for Gartic.io 🎨✨</h1>
