@@ -606,6 +606,8 @@
                     height: 30px;
                     border-radius: 50%;
                     margin-right: 10px;
+                    object-fit: cover;
+                    object-position: top;
                     border: 1px dashed var(--primary-color);
                 }
 
@@ -1272,6 +1274,27 @@
                 this.showNotification(`Chat Bypass Censorship: ${this.elements.chatBypassCensorship.checked ? 'Enabled' : 'Disabled'}`, 2000);
                 this.saveSettings();
             });
+
+            window.addEventListener('resize', () => {
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                const cheatWidth = this.elements.kawaiiCheat.offsetWidth;
+                const cheatHeight = this.elements.kawaiiCheat.offsetHeight;
+
+                let newX = this.state.xOffset;
+                let newY = this.state.yOffset;
+
+                newX = Math.max(0, Math.min(newX, windowWidth - cheatWidth));
+                newY = Math.max(0, Math.min(newY, windowHeight - cheatHeight));
+
+                if (newX !== this.state.xOffset || newY !== this.state.yOffset) {
+                    this.state.xOffset = newX;
+                    this.state.yOffset = newY;
+                    this.elements.kawaiiCheat.style.left = `${newX}px`;
+                    this.elements.kawaiiCheat.style.top = `${newY}px`;
+                    this.saveSettings();
+                }
+            });
         }
 
         startDragging(e) {
@@ -1289,12 +1312,23 @@
             e.preventDefault();
             const newX = e.clientX - this.state.initialX;
             const newY = e.clientY - this.state.initialY;
+
+            // Get window and menu dimensions
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            const cheatWidth = this.elements.kawaiiCheat.offsetWidth;
+            const cheatHeight = this.elements.kawaiiCheat.offsetHeight;
+
+            // Constrain position within window boundaries
+            const clampedX = Math.max(0, Math.min(newX, windowWidth - cheatWidth));
+            const clampedY = Math.max(0, Math.min(newY, windowHeight - cheatHeight));
+
             if (this.state.rafId) cancelAnimationFrame(this.state.rafId);
             this.state.rafId = requestAnimationFrame(() => {
-                this.elements.kawaiiCheat.style.left = `${newX}px`;
-                this.elements.kawaiiCheat.style.top = `${newY}px`;
-                this.state.xOffset = newX;
-                this.state.yOffset = newY;
+                this.elements.kawaiiCheat.style.left = `${clampedX}px`;
+                this.elements.kawaiiCheat.style.top = `${clampedY}px`;
+                this.state.xOffset = clampedX;
+                this.state.yOffset = clampedY;
                 this.saveSettings();
             });
         }
@@ -1653,91 +1687,91 @@
         }
 
         async detectRegions(data, canvasWidth, canvasHeight, imgLeft, imgRight, imgTop, imgBottom, colorToleranceValue) {
-    const backgroundColor = [255, 255, 255, 255];
-    const visited = new Uint8Array(canvasWidth * canvasHeight);
-    const regions = [];
+            const backgroundColor = [255, 255, 255, 255];
+            const visited = new Uint8Array(canvasWidth * canvasHeight);
+            const regions = [];
 
-    const getColorAt = (x, y) => {
-        if (x < 0 || x >= canvasWidth || y < 0 || y >= canvasHeight) {
-            return backgroundColor;
-        }
-        const index = (y * canvasWidth + x) * 4;
-        return [data[index], data[index + 1], data[index + 2], data[index + 3]];
-    };
+            const getColorAt = (x, y) => {
+                if (x < 0 || x >= canvasWidth || y < 0 || y >= canvasHeight) {
+                    return backgroundColor;
+                }
+                const index = (y * canvasWidth + x) * 4;
+                return [data[index], data[index + 1], data[index + 2], data[index + 3]];
+            };
 
-    const traceRegion = (startX, startY, startColor, tolerance) => {
-        const regionCoords = [];
-        const stack = [[startX, startY]];
-        const currentRegionVisited = new Set([`${startX},${startY}`]);
-        let minX = startX, minY = startY, maxX = startX, maxY = startY;
+            const traceRegion = (startX, startY, startColor, tolerance) => {
+                const regionCoords = [];
+                const stack = [[startX, startY]];
+                const currentRegionVisited = new Set([`${startX},${startY}`]);
+                let minX = startX, minY = startY, maxX = startX, maxY = startY;
 
-        visited[startY * canvasWidth + startX] = 1;
+                visited[startY * canvasWidth + startX] = 1;
 
-        const neighbors = [
-            [1, 0], [-1, 0], [0, 1], [0, -1] // 4-direction check
-        ];
+                const neighbors = [
+                    [1, 0], [-1, 0], [0, 1], [0, -1] // 4-direction check
+                ];
 
-        while (stack.length > 0) {
-            const [x, y] = stack.pop();
-            regionCoords.push([x, y]);
-            minX = Math.min(minX, x); minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+                while (stack.length > 0) {
+                    const [x, y] = stack.pop();
+                    regionCoords.push([x, y]);
+                    minX = Math.min(minX, x); minY = Math.min(minY, y);
+                    maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
 
-            for (const [dx, dy] of neighbors) {
-                const nx = x + dx;
-                const ny = y + dy;
-                const nKey = `${nx},${ny}`;
-                if (nx >= imgLeft && nx <= imgRight && ny >= imgTop && ny <= imgBottom &&
-                    visited[ny * canvasWidth + nx] === 0 &&
-                    !currentRegionVisited.has(nKey)
-                ) {
-                    const neighborColor = getColorAt(nx, ny);
-                    const distance = this.colorDistance(neighborColor, startColor);
+                    for (const [dx, dy] of neighbors) {
+                        const nx = x + dx;
+                        const ny = y + dy;
+                        const nKey = `${nx},${ny}`;
+                        if (nx >= imgLeft && nx <= imgRight && ny >= imgTop && ny <= imgBottom &&
+                            visited[ny * canvasWidth + nx] === 0 &&
+                            !currentRegionVisited.has(nKey)
+                           ) {
+                            const neighborColor = getColorAt(nx, ny);
+                            const distance = this.colorDistance(neighborColor, startColor);
 
-                    if (distance <= tolerance * 1.2) { // Dynamic tolerance
-                        visited[ny * canvasWidth + nx] = 1;
-                        currentRegionVisited.add(nKey);
-                        stack.push([nx, ny]);
+                            if (distance <= tolerance * 1.2) { // Dynamic tolerance
+                                visited[ny * canvasWidth + nx] = 1;
+                                currentRegionVisited.add(nKey);
+                                stack.push([nx, ny]);
+                            }
+                        }
+                    }
+                }
+
+                return regionCoords.length > 0 ? { // Allow smaller regions
+                    coords: regionCoords,
+                    color: startColor.slice(0, 3),
+                    bounds: { minX, minY, maxX, maxY }
+                } : null;
+            };
+
+            for (let y = imgTop; y <= imgBottom && this.isDrawing; y += 1) {
+                for (let x = imgLeft; x <= imgRight && this.isDrawing; x += 1) {
+                    if (!window.game.turn) { this.stopDrawing(); return []; }
+                    const index = y * canvasWidth + x;
+                    if (visited[index] === 1) continue;
+
+                    const pixelColor = getColorAt(x, y);
+                    const regionResult = traceRegion(x, y, pixelColor, colorToleranceValue);
+
+                    if (regionResult) {
+                        if (this.colorDistance(regionResult.color, backgroundColor) > colorToleranceValue) {
+                            regions.push({
+                                color: regionResult.color,
+                                hex: this.rgbToHex(regionResult.color),
+                                coords: regionResult.coords,
+                                size: regionResult.coords.length,
+                                bounds: regionResult.bounds
+                            });
+                        }
+                    } else {
+                        visited[index] = 1;
                     }
                 }
             }
+
+            regions.sort((a, b) => b.size - a.size);
+            return regions;
         }
-
-        return regionCoords.length > 0 ? { // Allow smaller regions
-            coords: regionCoords,
-            color: startColor.slice(0, 3),
-            bounds: { minX, minY, maxX, maxY }
-        } : null;
-    };
-
-    for (let y = imgTop; y <= imgBottom && this.isDrawing; y += 1) {
-        for (let x = imgLeft; x <= imgRight && this.isDrawing; x += 1) {
-            if (!window.game.turn) { this.stopDrawing(); return []; }
-            const index = y * canvasWidth + x;
-            if (visited[index] === 1) continue;
-
-            const pixelColor = getColorAt(x, y);
-            const regionResult = traceRegion(x, y, pixelColor, colorToleranceValue);
-
-            if (regionResult) {
-                if (this.colorDistance(regionResult.color, backgroundColor) > colorToleranceValue) {
-                    regions.push({
-                        color: regionResult.color,
-                        hex: this.rgbToHex(regionResult.color),
-                        coords: regionResult.coords,
-                        size: regionResult.coords.length,
-                        bounds: regionResult.bounds
-                    });
-                }
-            } else {
-                visited[index] = 1;
-            }
-        }
-    }
-
-    regions.sort((a, b) => b.size - a.size);
-    return regions;
-}
 
         areRegionsClose(boundsA, boundsB, threshold) {
             const horizontalClose = Math.abs(boundsA.maxX - boundsB.minX) <= threshold ||
