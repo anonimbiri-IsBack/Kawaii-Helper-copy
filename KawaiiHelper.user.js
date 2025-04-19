@@ -14,7 +14,7 @@
 // @supportURL   https://github.com/Gartic-Developers/Kawaii-Helper/issues/new?labels=bug&type=bug&template=bug_report.md&title=Bug+Report
 // @homepage     https://github.com/Gartic-Developers/Kawaii-Helper
 // @run-at       document-start
-// @tag          anonimbiri
+// @tag          games
 // @grant        none
 // @noframes
 // ==/UserScript==
