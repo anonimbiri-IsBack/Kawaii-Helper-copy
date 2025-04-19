@@ -2,7 +2,7 @@
 // @name         Kawaii Helper & Drawing Bot for Gartic.io
 // @name:tr      Gartic.io için Kawaii Yardımcı & Çizim Botu
 // @namespace    https://github.com/Gartic-Developers/Kawaii-Helper
-// @version      2025-03-30
+// @version      2025-04-19
 // @description  Helper for Gartic.io with auto-guess, drawing assistance, and drawing bot
 // @description:tr  Gartic.io için otomatik tahmin, çizim yardımı ve çizim botu ile yardımcı
 // @author       anonimbiri & Gartic-Developers
