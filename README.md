@@ -1,13 +1,11 @@
-# 🌸 Kawaii Helper & Drawing Bot for Gartic.io 🎨✨  
+<p align="center">
+  <img src="./Assets/kawaii-banner.png" alt="Kawaii Helper" style="width: 100%; max-width: 100%; height: 400px; object-fit: cover; object-position: top; border-radius: 8px;">
+</p>
 
-> **"Yume no sekai e tobikome! Let’s draw like an anime pro!"** 💖✨  
+<h1 align="center">🌸 Kawaii Helper & Drawing Bot for Gartic.io 🎨✨</h1>
 
 <p align="center">
-  <img src="./Assets/kawaii-logo.png" alt="Kawaii Helper" width="200" style="border-radius: 15px;">
-</p>  
-
-<p align="center">
-  <a href="https://github.com/anonimbiri-IsBack/kawaii-helper#installation-">
+  <a href="#downloado">
     <img src="https://img.shields.io/greasyfork/dt/528907?style=for-the-badge&color=ff66cc&labelColor=cc99ff&logo=greasyfork&logoColor=white" alt="Downloads">
   </a>  
   <a href="#">
@@ -37,7 +35,7 @@
 
 ---
 
-## 🔽 Downloado! ⬇️  
+## 🔽 <span id="downloado">Downloado!</span> ⬇️  
 
 🎀 **[Greasyfork](https://greasyfork.org/en/scripts/528907-kawaii-helper-drawing-bot-for-gartic-io/)** – Official *senpai-approved* script hub!  
 💖 **[GitHub Releases](https://github.com/Gartic-Developers/Kawaii-Helper/releases)** – Direct downloads for *otaku pro players*!  
@@ -59,10 +57,12 @@
 
 ## ⚠️ Yabai Disclaimer! 🚨  
 
-💡 *Kawaii Helper wa tanoshii desu!* But remember, some features might make the *game masters* *yandere* mode. Use responsibly, *senpai*! 😳  
+> [!WARNING]  
+> *Kawaii Helper wa tanoshii desu!*  
+> But remember, some features might make the *game masters* *yandere* mode. Use responsibly, *senpai*! 😳  
 
 ---
 
-## 🎀 Join the Kawaii Revolution Now! 💖✨  
+## 🙏 Special Thanks  
 
-🌸 **Gartic.io wa kimi no mono da!** Become the ultimate *anime artist*! 🎨✨  
+Thanks to [Gartic-Developers](https://github.com/Gartic-Developers/Gartic-WordList) by [Qwyua](https://github.com/Qwyua) 💖
